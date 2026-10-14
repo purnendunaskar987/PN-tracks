@@ -3,34 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily Expense Portal</title>
+  <title>Daily Expense Portal (Cloud)</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Supabase Cloud Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans text-slate-800">
 
+  <!-- SETUP REMINDER BANNER (Hides automatically once you paste your keys) -->
+  <div id="setupWarning" class="hidden max-w-2xl mx-auto mt-6 bg-amber-50 border border-amber-300 text-amber-900 p-4 rounded-xl text-sm">
+    <strong>⚠️ Almost done!</strong> Open <code>index.html</code> in VS Code, scroll down to <strong>Line 128</strong>, and paste your <strong>SUPABASE_URL</strong> and <strong>SUPABASE_ANON_KEY</strong>.
+  </div>
+
   <!-- 1. LOGIN & REGISTRATION SCREEN -->
-  <div id="authSection" class="max-w-md mx-auto mt-20 bg-white p-8 rounded-2xl shadow-lg">
+  <div id="authSection" class="max-w-md mx-auto mt-16 bg-white p-8 rounded-2xl shadow-lg">
     <h1 class="text-2xl font-bold text-center text-indigo-600 mb-2">Expense Tracker Portal</h1>
-    <p class="text-sm text-center text-slate-500 mb-6">Register a new account or log in to view your expenses</p>
+    <p class="text-sm text-center text-slate-500 mb-6">Cloud Edition — Log in from any device</p>
 
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium mb-1">Your Name or Email</label>
-        <input id="usernameInput" type="text" placeholder="e.g. rahul"
+        <label class="block text-sm font-medium mb-1">Username or Email</label>
+        <input id="usernameInput" type="text" placeholder="e.g. rahul or rahul@gmail.com"
           class="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div>
-        <label class="block text-sm font-medium mb-1">Password</label>
-        <input id="passwordInput" type="password" placeholder="Enter password"
+        <label class="block text-sm font-medium mb-1">Password (at least 6 characters)</label>
+        <input id="passwordInput" type="password" placeholder="Enter at least 6 characters"
           class="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <p id="authMessage" class="text-sm hidden"></p>
       <div class="flex gap-3 pt-2">
-        <button onclick="handleAuth('login')"
+        <button id="loginBtn" onclick="handleAuth('login')"
           class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition">
           Log In
         </button>
-        <button onclick="handleAuth('register')"
+        <button id="registerBtn" onclick="handleAuth('register')"
           class="w-1/2 bg-slate-800 hover:bg-slate-900 text-white font-medium py-2.5 rounded-lg transition">
           Register New User
         </button>
@@ -44,7 +51,7 @@
     <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-wrap justify-between items-center gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Daily Expense Sheet</h1>
-        <p class="text-sm text-slate-500">Account: <span id="currentUserDisplay" class="font-semibold text-indigo-600"></span></p>
+        <p class="text-sm text-slate-500">Logged in as: <span id="currentUserDisplay" class="font-semibold text-indigo-600"></span></p>
       </div>
       <div class="flex items-center gap-3">
         <button onclick="exportToCSV()"
@@ -82,7 +89,7 @@
           <div class="flex gap-2">
             <input id="expenseDate" type="text" disabled
               class="w-full bg-slate-100 border border-slate-200 text-slate-600 rounded-lg px-3 py-2 text-sm" />
-            <button type="submit"
+            <button id="saveBtn" type="submit"
               class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded-lg transition shrink-0">
               + Save
             </button>
@@ -118,120 +125,200 @@
   </div>
 
   <script>
-    let currentUser = null;
+    // ============================================================================
+    // PASTE YOUR 2 SUPABASE KEYS RIGHT HERE INSIDE THE QUOTES:
+    // ============================================================================
+    const SUPABASE_URL = "https://hxgtmkqpdqzfzirkgkdb.supabase.co/rest/v1/";
+    const SUPABASE_ANON_KEY = "sb_publishable_ac0m_HwMQ7JrFczmPQd6uQ_CfkyiVnd";
+    // ============================================================================
 
-    // Automatically get today's date (YYYY-MM-DD)
+    let supabaseClient = null;
+    let currentUser = null;
+    let cachedExpenses = [];
+
+    if (SUPABASE_URL.includes("PASTE_YOUR") || SUPABASE_ANON_KEY.includes("PASTE_YOUR")) {
+      document.getElementById('setupWarning').classList.remove('hidden');
+    } else {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      checkExistingSession();
+    }
+
     function getTodayDate() {
       const today = new Date();
       return today.toISOString().split('T')[0];
     }
 
-    function getUsers() {
-      return JSON.parse(localStorage.getItem('portal_users') || '{}');
+    // Allows users to type a simple name like "rahul" OR a full email
+    function formatToEmail(input) {
+      const clean = input.trim().toLowerCase();
+      return clean.includes('@') ? clean : `${clean}@expenseportal.local`;
     }
 
-    function getUserExpenses() {
-      if (!currentUser) return [];
-      const allExpenses = JSON.parse(localStorage.getItem('portal_expenses') || '{}');
-      return allExpenses[currentUser] || [];
+    function displayFriendlyName(email) {
+      return email.endsWith('@expenseportal.local')
+        ? email.replace('@expenseportal.local', '')
+        : email;
     }
 
-    function saveUserExpenses(expenses) {
-      const allExpenses = JSON.parse(localStorage.getItem('portal_expenses') || '{}');
-      allExpenses[currentUser] = expenses;
-      localStorage.setItem('portal_expenses', JSON.stringify(allExpenses));
+    // Check if the user is already logged in when page loads
+    async function checkExistingSession() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        currentUser = session.user;
+        showDashboard();
+      }
     }
 
-    // Handle Registration and Login
-    function handleAuth(mode) {
-      const username = document.getElementById('usernameInput').value.trim().toLowerCase();
+    // Register or Log In with Supabase Cloud
+    async function handleAuth(mode) {
+      if (!supabaseClient) {
+        alert("Please paste your SUPABASE_URL and SUPABASE_ANON_KEY in index.html first!");
+        return;
+      }
+
+      const rawUsername = document.getElementById('usernameInput').value;
       const password = document.getElementById('passwordInput').value;
       const msgEl = document.getElementById('authMessage');
       msgEl.className = 'text-sm text-red-500';
 
-      if (!username || !password) {
-        msgEl.textContent = 'Please fill in both fields.';
+      if (!rawUsername.trim() || !password) {
+        msgEl.textContent = 'Please enter both username and password.';
         msgEl.classList.remove('hidden');
         return;
       }
 
-      const users = getUsers();
-
-      if (mode === 'register') {
-        if (users[username]) {
-          msgEl.textContent = 'This user already exists! Click Log In instead.';
-          msgEl.classList.remove('hidden');
-          return;
-        }
-        users[username] = { password };
-        localStorage.setItem('portal_users', JSON.stringify(users));
-      } else {
-        if (!users[username] || users[username].password !== password) {
-          msgEl.textContent = 'Wrong username or password. If you are new, click Register New User.';
-          msgEl.classList.remove('hidden');
-          return;
-        }
+      if (password.length < 6) {
+        msgEl.textContent = 'Password must be at least 6 characters long.';
+        msgEl.classList.remove('hidden');
+        return;
       }
 
-      currentUser = username;
-      msgEl.classList.add('hidden');
-      document.getElementById('authSection').classList.add('hidden');
-      document.getElementById('appSection').classList.remove('hidden');
-      document.getElementById('currentUserDisplay').textContent = currentUser;
-      document.getElementById('expenseDate').value = getTodayDate();
-      renderExpenses();
+      const email = formatToEmail(rawUsername);
+      msgEl.className = 'text-sm text-indigo-600';
+      msgEl.textContent = mode === 'register' ? 'Creating your cloud account...' : 'Logging in...';
+      msgEl.classList.remove('hidden');
+
+      let result;
+      if (mode === 'register') {
+        result = await supabaseClient.auth.signUp({ email, password });
+      } else {
+        result = await supabaseClient.auth.signInWithPassword({ email, password });
+      }
+
+      if (result.error) {
+        msgEl.className = 'text-sm text-red-500';
+        msgEl.textContent = result.error.message;
+        return;
+      }
+
+      if (result.data.user) {
+        currentUser = result.data.user;
+        msgEl.classList.add('hidden');
+        showDashboard();
+      }
     }
 
-    function logout() {
+    function showDashboard() {
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('appSection').classList.remove('hidden');
+      document.getElementById('currentUserDisplay').textContent = displayFriendlyName(currentUser.email);
+      document.getElementById('expenseDate').value = getTodayDate();
+      loadExpensesFromCloud();
+    }
+
+    async function logout() {
+      if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
       currentUser = null;
+      cachedExpenses = [];
       document.getElementById('usernameInput').value = '';
       document.getElementById('passwordInput').value = '';
       document.getElementById('appSection').classList.add('hidden');
       document.getElementById('authSection').classList.remove('hidden');
     }
 
-    function addExpense(e) {
+    // Fetch logged-in user's expenses from Supabase Cloud
+    async function loadExpensesFromCloud() {
+      const tbody = document.getElementById('expenseTableBody');
+      tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">Loading your cloud expenses...</td></tr>`;
+
+      const { data, error } = await supabaseClient
+        .from('expenses')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        alert('Error loading expenses: ' + error.message);
+        return;
+      }
+
+      cachedExpenses = data || [];
+      renderExpenses();
+    }
+
+    // Save a new expense to Supabase Cloud
+    async function addExpense(e) {
       e.preventDefault();
       const nameInput = document.getElementById('expenseName');
       const amountInput = document.getElementById('expenseAmount');
+      const saveBtn = document.getElementById('saveBtn');
 
-      const expenses = getUserExpenses();
-      expenses.push({
-        id: Date.now().toString(),
-        name: nameInput.value.trim(),
-        amount: parseFloat(amountInput.value),
-        date: getTodayDate()
-      });
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
 
-      saveUserExpenses(expenses);
+      const { error } = await supabaseClient.from('expenses').insert([
+        {
+          user_id: currentUser.id,
+          expense_name: nameInput.value.trim(),
+          amount: parseFloat(amountInput.value),
+          expense_date: getTodayDate()
+        }
+      ]);
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = '+ Save';
+
+      if (error) {
+        alert('Could not save expense: ' + error.message);
+        return;
+      }
+
       nameInput.value = '';
       amountInput.value = '';
       nameInput.focus();
-      renderExpenses();
+      await loadExpensesFromCloud();
     }
 
-    function deleteExpense(id) {
-      const expenses = getUserExpenses().filter(item => item.id !== id);
-      saveUserExpenses(expenses);
-      renderExpenses();
+    // Delete an expense from Supabase Cloud
+    async function deleteExpense(id) {
+      const { error } = await supabaseClient
+        .from('expenses')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('Could not delete: ' + error.message);
+        return;
+      }
+
+      await loadExpensesFromCloud();
     }
 
-    // Displays expenses grouped day-by-day with auto-modifying Serial No.
+    // Render Table & Auto-Modify Serial Numbers (1, 2, 3...)
     function renderExpenses() {
-      const expenses = getUserExpenses();
       const tbody = document.getElementById('expenseTableBody');
       tbody.innerHTML = '';
 
-      // Automatically set the next Serial No. in the top box
-      document.getElementById('nextSerialPreview').value = expenses.length + 1;
+      document.getElementById('nextSerialPreview').value = cachedExpenses.length + 1;
 
       let grandTotal = 0;
 
-      if (expenses.length === 0) {
+      if (cachedExpenses.length === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="5" class="py-8 text-center text-slate-400">
-              No expenses added yet. Write your first expense above!
+              No expenses recorded yet. Write your first expense above!
             </td>
           </tr>`;
         document.getElementById('totalAmountDisplay').textContent = '0.00';
@@ -240,18 +327,18 @@
 
       let lastDate = null;
 
-      expenses.forEach((item, index) => {
-        const serialNo = index + 1; // Always 1, 2, 3... automatically adjusts if deleted
-        grandTotal += item.amount;
+      cachedExpenses.forEach((item, index) => {
+        const serialNo = index + 1;
+        const amountNum = parseFloat(item.amount);
+        grandTotal += amountNum;
 
-        // Add a Day Header Row whenever the date changes
-        if (item.date !== lastDate) {
-          lastDate = item.date;
+        if (item.expense_date !== lastDate) {
+          lastDate = item.expense_date;
           const dayHeader = document.createElement('tr');
           dayHeader.className = 'bg-indigo-50/60';
           dayHeader.innerHTML = `
             <td colspan="5" class="py-2 px-4 text-xs font-bold uppercase tracking-wider text-indigo-700">
-              📅 Date: ${item.date}
+              📅 Date: ${item.expense_date}
             </td>
           `;
           tbody.appendChild(dayHeader);
@@ -261,9 +348,9 @@
         row.className = 'hover:bg-slate-50 transition';
         row.innerHTML = `
           <td class="py-3 px-4 font-mono font-semibold text-slate-600">${serialNo}</td>
-          <td class="py-3 px-4 font-medium text-slate-800">${escapeHTML(item.name)}</td>
-          <td class="py-3 px-4 font-semibold text-emerald-700">${item.amount.toFixed(2)}</td>
-          <td class="py-3 px-4 text-slate-500">${item.date}</td>
+          <td class="py-3 px-4 font-medium text-slate-800">${escapeHTML(item.expense_name)}</td>
+          <td class="py-3 px-4 font-semibold text-emerald-700">${amountNum.toFixed(2)}</td>
+          <td class="py-3 px-4 text-slate-500">${item.expense_date}</td>
           <td class="py-3 px-4 text-right">
             <button onclick="deleteExpense('${item.id}')"
               class="text-red-500 hover:text-red-700 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 transition">
@@ -277,10 +364,9 @@
       document.getElementById('totalAmountDisplay').textContent = grandTotal.toFixed(2);
     }
 
-    // Export to CSV (Opens cleanly in Microsoft Excel or Google Sheets)
+    // Export Cloud Expenses to Excel / CSV
     function exportToCSV() {
-      const expenses = getUserExpenses();
-      if (expenses.length === 0) {
+      if (cachedExpenses.length === 0) {
         alert('Please add at least one expense before exporting!');
         return;
       }
@@ -288,11 +374,12 @@
       let csvContent = 'Serial No.,Where Expensed,Money Expensed,Date\n';
       let total = 0;
 
-      expenses.forEach((item, index) => {
+      cachedExpenses.forEach((item, index) => {
         const serialNo = index + 1;
-        total += item.amount;
-        const cleanName = '"' + item.name.replace(/"/g, '""') + '"';
-        csvContent += `${serialNo},${cleanName},${item.amount.toFixed(2)},${item.date}\n`;
+        const amountNum = parseFloat(item.amount);
+        total += amountNum;
+        const cleanName = '"' + item.expense_name.replace(/"/g, '""') + '"';
+        csvContent += `${serialNo},${cleanName},${amountNum.toFixed(2)},${item.expense_date}\n`;
       });
 
       csvContent += `\n,TOTAL EXPENSED,${total.toFixed(2)},\n`;
@@ -300,8 +387,9 @@
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
+      const userName = displayFriendlyName(currentUser.email);
       link.setAttribute('href', url);
-      link.setAttribute('download', `Expense_Sheet_${currentUser}_${getTodayDate()}.csv`);
+      link.setAttribute('download', `Expense_Sheet_${userName}_${getTodayDate()}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
