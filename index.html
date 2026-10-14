@@ -394,7 +394,7 @@
     .chat-card {
       position: fixed;
       right: 20px;
-      bottom: 20px;
+      bottom: clamp(72px, 10vh, 96px);
       width: min(420px, calc(100vw - 24px));
       max-height: 78vh;
       margin-top: 0;
@@ -409,7 +409,7 @@
     .chat-toggle-bubble {
       position: fixed;
       right: 20px;
-      bottom: 20px;
+      bottom: clamp(72px, 10vh, 96px);
       z-index: 61;
       border: none;
       border-radius: 18px;
@@ -592,6 +592,9 @@
         right: 12px;
         left: 12px;
         width: auto;
+      }
+      .chat-toggle-bubble {
+        right: 12px;
       }
       .chat-form {
         flex-direction: column;
@@ -879,6 +882,7 @@
     let isPasswordRecovery = false;
     let editingExpenseId = null;
     let editingExpenseIdField = 'id';
+    let dateRefreshTimer = null;
 
     function getActiveKeys() {
       const url = !SUPABASE_URL.includes("PASTE_YOUR") ? SUPABASE_URL : localStorage.getItem('saved_sb_url') || '';
@@ -920,7 +924,28 @@
 
     initSupabase();
 
-    function getTodayDate() { return new Date().toISOString().split('T')[0]; }
+    function getTodayDate(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function refreshTodayDate() {
+      const today = getTodayDate();
+      document.getElementById('statTodayDate').textContent = today;
+      if (!editingExpenseId) {
+        document.getElementById('expenseDate').value = today;
+      }
+    }
+
+    function startTodayDateRefresh() {
+      refreshTodayDate();
+      if (dateRefreshTimer === null) {
+        dateRefreshTimer = window.setInterval(refreshTodayDate, 30000);
+      }
+    }
+
     function formatToEmail(input) {
       const clean = input.trim().toLowerCase();
       return clean.includes('@') ? clean : `${clean}@expenseportal.local`;
@@ -1064,14 +1089,12 @@
     }
 
     function showDashboard() {
-      const today = getTodayDate();
       document.getElementById('authSection').classList.add('hidden');
       document.getElementById('appSection').classList.remove('hidden');
       document.getElementById('expantWidget').classList.remove('hidden');
       document.getElementById('expantOpenButton').classList.add('hidden');
       document.getElementById('currentUserDisplay').textContent = displayFriendlyName(currentUser.email);
-      document.getElementById('expenseDate').value = today;
-      document.getElementById('statTodayDate').textContent = today;
+      startTodayDateRefresh();
       showExpantWelcome();
       loadExpensesFromCloud();
     }
@@ -1086,6 +1109,10 @@
       document.getElementById('authSection').classList.remove('hidden');
       document.getElementById('expantWidget').classList.add('hidden');
       document.getElementById('expantOpenButton').classList.add('hidden');
+      if (dateRefreshTimer !== null) {
+        window.clearInterval(dateRefreshTimer);
+        dateRefreshTimer = null;
+      }
     }
 
     async function loadExpensesFromCloud() {
