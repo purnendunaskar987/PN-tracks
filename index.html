@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23187a55'/%3E%3Cpath d='M20 17h27v6H37c3 2 5 5 5 9h6v5h-6c-1 8-7 13-17 14v-6c6 0 10-3 11-8H20v-5h16c-1-4-4-7-9-7h-7z' fill='white'/%3E%3C/svg%3E" />
   <title>ExpensePortal — Daily Expense Tracker</title>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -10,47 +11,54 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    /* ==========================================
-       1. WHITE & DARK THEME COLOR VARIABLES
-       ========================================== */
     :root[data-theme="light"] {
-      --bg-page: #f4f6fb;
+      color-scheme: light;
+      --bg-page: #f3f7f4;
+      --bg-page-end: #edf3ef;
       --bg-card: #ffffff;
-      --bg-input: #f8fafc;
-      --bg-muted: #f1f5f9;
-      --bg-day-row: #eef2ff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --text-day-row: #4338ca;
-      --border-color: #e2e8f0;
-      --accent-primary: #6366f1;
-      --accent-hover: #4f46e5;
-      --emerald-text: #059669;
-      --emerald-bg: #ecfdf5;
-      --danger-text: #ef4444;
-      --danger-bg: #fef2f2;
-      --shadow-card: 0 10px 30px -5px rgba(15, 23, 42, 0.06);
+      --bg-input: #fbfdfb;
+      --bg-muted: #edf3ef;
+      --bg-day-row: #e6f2eb;
+      --text-main: #19251f;
+      --text-muted: #64736b;
+      --text-day-row: #176747;
+      --border-color: #dce7df;
+      --accent-primary: #187a55;
+      --accent-hover: #126343;
+      --brand-start: #1d8b62;
+      --brand-end: #125a43;
+      --focus-ring: rgba(24, 122, 85, 0.18);
+      --emerald-text: #14734f;
+      --emerald-bg: #e5f4eb;
+      --danger-text: #c44545;
+      --danger-bg: #fff0ed;
+      --shadow-card: 0 12px 32px -12px rgba(25, 57, 40, 0.18);
       --header-bg: rgba(255, 255, 255, 0.88);
     }
 
     :root[data-theme="dark"] {
-      --bg-page: #090d16;
-      --bg-card: #111827;
-      --bg-input: #1e293b;
-      --bg-muted: #1f2937;
-      --bg-day-row: rgba(99, 102, 241, 0.15);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-day-row: #a5b4fc;
-      --border-color: #1f2937;
-      --accent-primary: #6366f1;
-      --accent-hover: #818cf8;
-      --emerald-text: #34d399;
-      --emerald-bg: rgba(16, 185, 129, 0.12);
-      --danger-text: #f87171;
-      --danger-bg: rgba(239, 68, 68, 0.15);
-      --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
-      --header-bg: rgba(17, 24, 39, 0.88);
+      color-scheme: dark;
+      --bg-page: #111814;
+      --bg-page-end: #17221b;
+      --bg-card: #1a241e;
+      --bg-input: #202c25;
+      --bg-muted: #26342c;
+      --bg-day-row: rgba(76, 168, 119, 0.16);
+      --text-main: #eff7f1;
+      --text-muted: #a2b3a8;
+      --text-day-row: #a7dfbf;
+      --border-color: #304037;
+      --accent-primary: #72c89a;
+      --accent-hover: #8bd8ad;
+      --brand-start: #55bd87;
+      --brand-end: #24734f;
+      --focus-ring: rgba(114, 200, 154, 0.22);
+      --emerald-text: #9ce0b8;
+      --emerald-bg: rgba(55, 145, 91, 0.2);
+      --danger-text: #ff9b8c;
+      --danger-bg: rgba(177, 65, 55, 0.2);
+      --shadow-card: 0 14px 34px -14px rgba(0, 0, 0, 0.55);
+      --header-bg: rgba(26, 36, 30, 0.9);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -58,12 +66,13 @@
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: var(--bg-page);
+      background-image: linear-gradient(135deg, var(--bg-page), var(--bg-page-end));
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: background-color 0.25s ease, color 0.25s ease;
+      transition: background-color 0.25s ease, background-image 0.25s ease, color 0.25s ease;
     }
 
     .navbar {
@@ -96,12 +105,12 @@
       width: 36px;
       height: 36px;
       border-radius: 10px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
       color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+      box-shadow: 0 4px 12px var(--focus-ring);
     }
 
     .brand span { color: var(--accent-primary); }
@@ -109,12 +118,12 @@
     .theme-btn {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       background: var(--bg-muted);
       color: var(--text-main);
       border: 1px solid var(--border-color);
-      padding: 8px 14px;
-      border-radius: 12px;
+      padding: 6px 12px 6px 7px;
+      border-radius: 999px;
       font-size: 0.82rem;
       font-weight: 700;
       cursor: pointer;
@@ -122,8 +131,42 @@
     }
 
     .theme-btn:hover { border-color: var(--accent-primary); }
+    .theme-switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 46px;
+      height: 28px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: var(--border-color);
+      color: var(--text-muted);
+      transition: background-color 0.25s ease;
+    }
+    .theme-switch-icon { font-size: 0.9rem; font-weight: 700; line-height: 1; }
+    .theme-switch-thumb {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.25s ease;
+    }
+    :root[data-theme="dark"] .theme-switch { background: var(--accent-primary); color: #183222; }
+    :root[data-theme="dark"] .theme-switch-thumb { transform: translateX(18px); }
+
+    .theme-btn:focus-visible, .btn:focus-visible, .delete-btn:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
 
     main {
+      position: relative;
+      z-index: 1;
       flex: 1;
       width: 100%;
       max-width: 1020px;
@@ -134,12 +177,54 @@
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 22px;
+      border-radius: 16px;
       padding: 28px;
       box-shadow: var(--shadow-card);
     }
 
     .hidden { display: none !important; }
+
+    #cursorAura { display: none; }
+
+    #starfield { display: none; }
+
+    @media (prefers-reduced-motion: no-preference) {
+      #starfield {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+    }
+
+    @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+      #cursorAura {
+        display: block;
+        position: fixed;
+        z-index: 100;
+        top: 0;
+        left: 0;
+        width: 30px;
+        height: 30px;
+        border: 1.5px solid var(--accent-primary);
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 5px var(--focus-ring);
+        opacity: 0;
+        pointer-events: none;
+        transform: translate3d(var(--cursor-x, -100px), var(--cursor-y, -100px), 0) translate(-50%, -50%);
+        transition: opacity 160ms ease, transform 110ms ease-out, width 180ms ease, height 180ms ease, background-color 180ms ease;
+      }
+
+      #cursorAura.is-visible { opacity: 0.8; }
+      #cursorAura.is-interactive {
+        width: 42px;
+        height: 42px;
+        background: var(--focus-ring);
+      }
+    }
 
     label {
       display: block;
@@ -164,7 +249,7 @@
       transition: border-color 0.2s;
     }
 
-    input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+    input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px var(--focus-ring); }
     input:disabled { background: var(--bg-muted); color: var(--text-muted); cursor: not-allowed; font-weight: 700; }
 
     .btn {
@@ -183,9 +268,9 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
       color: #ffffff;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+      box-shadow: 0 4px 14px var(--focus-ring);
     }
     .btn-primary:hover { opacity: 0.95; transform: translateY(-1px); }
 
@@ -234,17 +319,19 @@
 
     .stat-card {
       padding: 20px;
-      border-radius: 18px;
+      border-radius: 14px;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       box-shadow: var(--shadow-card);
     }
 
     .stat-card.highlight {
-      background: linear-gradient(135deg, #6366f1, #4338ca);
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
       color: #ffffff;
       border: none;
     }
+
+    .stat-card.highlight label { color: #d7f3e2 !important; }
 
     .stat-value { font-size: 1.65rem; font-weight: 800; margin-top: 4px; }
 
@@ -272,6 +359,7 @@
       border-bottom: 1px solid var(--border-color);
     }
     td { padding: 14px 20px; border-bottom: 1px solid var(--border-color); font-size: 0.92rem; }
+    tbody tr:not(.day-row):hover td { background: var(--bg-input); }
 
     .day-row td {
       background: var(--bg-day-row);
@@ -304,6 +392,8 @@
     .delete-btn:hover { opacity: 0.85; }
 
     footer {
+      position: relative;
+      z-index: 1;
       background: var(--header-bg);
       border-top: 1px solid var(--border-color);
       padding: 20px;
@@ -324,7 +414,8 @@
     .heart-icon { color: #ef4444; display: inline-flex; animation: pulse 1.4s infinite; }
     .author-name {
       font-weight: 800;
-      background: linear-gradient(135deg, #6366f1, #ec4899);
+      background: linear-gradient(135deg, var(--accent-primary), #d56a59);
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -333,6 +424,8 @@
   </style>
 </head>
 <body>
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div id="cursorAura" aria-hidden="true"></div>
 
   <!-- TOP NAVBAR -->
   <header class="navbar">
@@ -341,9 +434,12 @@
         <div class="brand-icon">₹</div>
         <div>Expense<span>Portal</span></div>
       </div>
-      <button class="theme-btn" onclick="toggleTheme()">
-        <span id="themeIcon">🌙</span>
-        <span id="themeText">Dark Theme</span>
+      <button class="theme-btn" type="button" role="switch" aria-label="Dark theme" aria-checked="false" onclick="toggleTheme()">
+        <span class="theme-switch" aria-hidden="true">
+          <span class="theme-switch-icon">☀</span>
+          <span class="theme-switch-icon">☾</span>
+          <span class="theme-switch-thumb"></span>
+        </span>
       </button>
     </div>
   </header>
@@ -351,7 +447,7 @@
   <!-- MAIN CONTENT -->
   <main>
     <!-- SETUP BOX -->
-    <div id="setupBox" class="card auth-box hidden" style="margin-bottom: 24px; border: 2px dashed #6366f1;">
+    <div id="setupBox" class="card auth-box hidden" style="margin-bottom: 24px; border: 2px dashed var(--accent-primary);">
       <span class="badge">⚡ Vercel Cloud Setup</span>
       <h2 style="font-size: 1.2rem; margin-bottom: 6px;">Connect Supabase Keys</h2>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
@@ -507,8 +603,7 @@
     function setTheme(mode) {
       document.documentElement.setAttribute('data-theme', mode);
       localStorage.setItem('purnendu_portal_theme', mode);
-      document.getElementById('themeIcon').textContent = mode === 'dark' ? '☀️' : '🌙';
-      document.getElementById('themeText').textContent = mode === 'dark' ? 'White Theme' : 'Dark Theme';
+      document.querySelector('.theme-btn').setAttribute('aria-checked', String(mode === 'dark'));
     }
 
     initTheme();
@@ -739,6 +834,106 @@
     function escapeHTML(str) {
       return str.replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
     }
+  </script>
+  <script>
+    const cursorAura = document.getElementById('cursorAura');
+    const supportsCursorAnimation = window.matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)').matches;
+
+    if (supportsCursorAnimation) {
+      document.addEventListener('pointermove', event => {
+        if (event.pointerType === 'touch') return;
+        cursorAura.style.setProperty('--cursor-x', `${event.clientX}px`);
+        cursorAura.style.setProperty('--cursor-y', `${event.clientY}px`);
+        cursorAura.classList.add('is-visible');
+        cursorAura.classList.toggle('is-interactive', Boolean(event.target.closest('a, button, input, select, textarea, label')));
+      });
+
+      document.addEventListener('pointerout', event => {
+        if (!event.relatedTarget) cursorAura.classList.remove('is-visible');
+      });
+    }
+  </script>
+  <script>
+    (() => {
+      const starCanvas = document.getElementById('starfield');
+      const starContext = starCanvas.getContext('2d');
+      const motionPreference = window.matchMedia('(prefers-reduced-motion: no-preference)');
+      const stars = [];
+      const pointer = { x: 0, y: 0, active: false };
+      let viewportWidth = 0;
+      let viewportHeight = 0;
+
+      if (!starContext || !motionPreference.matches) return;
+
+      function resizeStarfield() {
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        viewportWidth = window.innerWidth;
+        viewportHeight = window.innerHeight;
+        starCanvas.width = Math.round(viewportWidth * pixelRatio);
+        starCanvas.height = Math.round(viewportHeight * pixelRatio);
+        starContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+        const starCount = Math.min(100, Math.max(36, Math.round(viewportWidth * viewportHeight / 17000)));
+        while (stars.length < starCount) {
+          stars.push({
+            x: Math.random() * viewportWidth,
+            y: Math.random() * viewportHeight,
+            radius: 0.7 + Math.random() * 1.1,
+            driftX: (Math.random() - 0.5) * 0.12,
+            driftY: -0.04 - Math.random() * 0.12,
+            phase: Math.random() * Math.PI * 2
+          });
+        }
+        stars.length = starCount;
+      }
+
+      function animateStars(time) {
+        starContext.clearRect(0, 0, viewportWidth, viewportHeight);
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const starColor = isDark ? '198, 235, 210' : '24, 122, 85';
+
+        stars.forEach(star => {
+          star.x += star.driftX + Math.sin(time * 0.00045 + star.phase) * 0.035;
+          star.y += star.driftY + Math.cos(time * 0.0004 + star.phase) * 0.025;
+
+          if (pointer.active) {
+            const deltaX = pointer.x - star.x;
+            const deltaY = pointer.y - star.y;
+            const distance = Math.hypot(deltaX, deltaY);
+            if (distance < 180 && distance > 0) {
+              const pull = (1 - distance / 180) * 0.018;
+              star.x += deltaX * pull;
+              star.y += deltaY * pull;
+            }
+          }
+
+          if (star.x < -4) star.x = viewportWidth + 4;
+          if (star.x > viewportWidth + 4) star.x = -4;
+          if (star.y < -4) star.y = viewportHeight + 4;
+          if (star.y > viewportHeight + 4) star.y = -4;
+
+          const twinkle = 0.18 + (Math.sin(time * 0.0012 + star.phase) + 1) * 0.2;
+          starContext.beginPath();
+          starContext.fillStyle = `rgba(${starColor}, ${twinkle})`;
+          starContext.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+          starContext.fill();
+        });
+
+        requestAnimationFrame(animateStars);
+      }
+
+      window.addEventListener('resize', resizeStarfield);
+      window.addEventListener('pointermove', event => {
+        if (event.pointerType === 'touch') return;
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+        pointer.active = true;
+      });
+      window.addEventListener('blur', () => { pointer.active = false; });
+
+      resizeStarfield();
+      requestAnimationFrame(animateStars);
+    })();
   </script>
 </body>
 </html>
