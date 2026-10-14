@@ -470,11 +470,11 @@
     <div id="authSection" class="card auth-box">
       <div style="text-align: center; margin-bottom: 22px;">
         <span class="badge">☁️ Cloud Synced Ledger</span>
-        <h1 style="font-size: 1.6rem; font-weight: 800;">Welcome</h1>
-        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">Log in or register to manage your expenses</p>
+        <h1 id="authTitle" style="font-size: 1.6rem; font-weight: 800;">Welcome</h1>
+        <p id="authDescription" style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">Log in or register to manage your expenses</p>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 15px;">
+      <div id="loginFormView" style="display: flex; flex-direction: column; gap: 15px;">
         <div>
           <label>Username or Email</label>
           <input id="usernameInput" type="text" placeholder="e.g. purnendu" />
@@ -490,6 +490,31 @@
           <button onclick="handleAuth('login')" class="btn btn-primary">Log In</button>
           <button onclick="handleAuth('register')" class="btn btn-secondary">Register</button>
         </div>
+        <button type="button" class="btn btn-secondary" onclick="showResetRequest()">Forgot your password?</button>
+      </div>
+
+      <div id="resetRequestView" class="hidden" style="display: flex; flex-direction: column; gap: 15px;">
+        <div>
+          <label for="resetEmailInput">Email address</label>
+          <input id="resetEmailInput" type="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <p id="resetRequestMessage" class="hidden" style="font-size: 0.85rem; font-weight: 700;"></p>
+        <button type="button" class="btn btn-primary" onclick="sendPasswordReset()">Send reset link</button>
+        <button type="button" class="btn btn-secondary" onclick="setAuthView('login')">Back to login</button>
+      </div>
+
+      <div id="passwordRecoveryView" class="hidden" style="display: flex; flex-direction: column; gap: 15px;">
+        <div>
+          <label for="newPasswordInput">New password</label>
+          <input id="newPasswordInput" type="password" placeholder="At least 6 characters" autocomplete="new-password" />
+        </div>
+        <div>
+          <label for="confirmPasswordInput">Confirm new password</label>
+          <input id="confirmPasswordInput" type="password" placeholder="Enter the password again" autocomplete="new-password" />
+        </div>
+        <p id="passwordRecoveryMessage" class="hidden" style="font-size: 0.85rem; font-weight: 700;"></p>
+        <button type="button" class="btn btn-primary" onclick="updatePassword()">Save new password</button>
+        <button type="button" class="btn btn-secondary" onclick="setAuthView('login')">Back to login</button>
       </div>
     </div>
 
@@ -587,7 +612,7 @@
 
   <script>
     // OPTIONAL: Paste your keys directly here if you don't want to use the UI box
-    const SUPABASE_URL = "https://hxgtmkqpdqzfzirkgkdb.supabase.co/rest/v1/";
+    const SUPABASE_URL = "https://hxgtmkqpdqzfzirkgkdb.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_ac0m_HwMQ7JrFczmPQd6uQ_CfkyiVnd";
 
     function initTheme() {
@@ -611,10 +636,11 @@
     let supabaseClient = null;
     let currentUser = null;
     let cachedExpenses = [];
+    let isPasswordRecovery = false;
 
     function getActiveKeys() {
-      const url = !CODE_SUPABASE_URL.includes("PASTE_YOUR") ? CODE_SUPABASE_URL : localStorage.getItem('saved_sb_url') || '';
-      const key = !CODE_SUPABASE_KEY.includes("PASTE_YOUR") ? CODE_SUPABASE_KEY : localStorage.getItem('saved_sb_key') || '';
+      const url = !SUPABASE_URL.includes("PASTE_YOUR") ? SUPABASE_URL : localStorage.getItem('saved_sb_url') || '';
+      const key = !SUPABASE_ANON_KEY.includes("PASTE_YOUR") ? SUPABASE_ANON_KEY : localStorage.getItem('saved_sb_key') || '';
       return { url: url.trim(), key: key.trim() };
     }
 
@@ -626,6 +652,15 @@
       }
       document.getElementById('setupBox').classList.add('hidden');
       supabaseClient = window.supabase.createClient(url, key);
+      supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          isPasswordRecovery = true;
+          currentUser = session?.user || null;
+          document.getElementById('appSection').classList.add('hidden');
+          document.getElementById('authSection').classList.remove('hidden');
+          setAuthView('recovery');
+        }
+      });
       checkExistingSession();
     }
 
@@ -654,7 +689,7 @@
 
     async function checkExistingSession() {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session && session.user) {
+      if (session && session.user && !isPasswordRecovery) {
         currentUser = session.user;
         showDashboard();
       }
@@ -697,6 +732,95 @@
         msgEl.classList.add('hidden');
         showDashboard();
       }
+    }
+
+    function setAuthView(view) {
+      document.getElementById('loginFormView').classList.toggle('hidden', view !== 'login');
+      document.getElementById('resetRequestView').classList.toggle('hidden', view !== 'reset');
+      document.getElementById('passwordRecoveryView').classList.toggle('hidden', view !== 'recovery');
+
+      const copy = {
+        login: ['Welcome', 'Log in or register to manage your expenses'],
+        reset: ['Reset your password', 'Enter the email address associated with your account'],
+        recovery: ['Choose a new password', 'Create a new password for your account']
+      }[view];
+      document.getElementById('authTitle').textContent = copy[0];
+      document.getElementById('authDescription').textContent = copy[1];
+    }
+
+    function showResetRequest() {
+      const username = document.getElementById('usernameInput').value.trim();
+      const emailInput = document.getElementById('resetEmailInput');
+      emailInput.value = username.includes('@') ? username : '';
+      document.getElementById('resetRequestMessage').classList.add('hidden');
+      setAuthView('reset');
+    }
+
+    async function sendPasswordReset() {
+      const emailInput = document.getElementById('resetEmailInput');
+      const message = document.getElementById('resetRequestMessage');
+      const showMessage = (text, isError = false) => {
+        message.textContent = text;
+        message.style.color = isError ? 'var(--danger-text)' : 'var(--emerald-text)';
+        message.classList.remove('hidden');
+      };
+
+      if (!supabaseClient) {
+        showMessage('Supabase is not connected. Please try again later.', true);
+        return;
+      }
+      if (!emailInput.value.trim() || !emailInput.checkValidity()) {
+        showMessage('Enter a valid email address.', true);
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(emailInput.value.trim(), {
+        redirectTo: window.location.origin + window.location.pathname
+      });
+      if (error) {
+        showMessage(error.message, true);
+        return;
+      }
+      showMessage('If an account exists for that email, a password reset link has been sent.');
+    }
+
+    async function updatePassword() {
+      const password = document.getElementById('newPasswordInput').value;
+      const confirmation = document.getElementById('confirmPasswordInput').value;
+      const message = document.getElementById('passwordRecoveryMessage');
+      const showMessage = (text, isError = false) => {
+        message.textContent = text;
+        message.style.color = isError ? 'var(--danger-text)' : 'var(--emerald-text)';
+        message.classList.remove('hidden');
+      };
+
+      if (!supabaseClient) {
+        showMessage('Supabase is not connected. Please try again later.', true);
+        return;
+      }
+      if (password.length < 6) {
+        showMessage('Password must be at least 6 characters.', true);
+        return;
+      }
+      if (password !== confirmation) {
+        showMessage('The passwords do not match.', true);
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.updateUser({ password });
+      if (error) {
+        showMessage(error.message, true);
+        return;
+      }
+
+      isPasswordRecovery = false;
+      document.getElementById('usernameInput').value = document.getElementById('resetEmailInput').value.trim();
+      document.getElementById('passwordInput').value = '';
+      setAuthView('login');
+      const authMessage = document.getElementById('authMessage');
+      authMessage.textContent = 'Password updated. Log in with your new password.';
+      authMessage.style.color = 'var(--emerald-text)';
+      authMessage.classList.remove('hidden');
     }
 
     function showDashboard() {
