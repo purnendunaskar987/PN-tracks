@@ -1,271 +1,560 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily Expense Portal</title>
-  <!-- Google Font: Plus Jakarta Sans -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Tailwind CSS with Dark Mode enabled -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          }
-        }
-      }
-    }
-  </script>
+  <title>ExpensePortal — Daily Expense Tracker</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Supabase Cloud Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ==========================================
+       1. WHITE & DARK THEME COLOR VARIABLES
+       ========================================== */
+    :root[data-theme="light"] {
+      --bg-page: #f4f6fb;
+      --bg-card: #ffffff;
+      --bg-input: #f8fafc;
+      --bg-muted: #f1f5f9;
+      --bg-day-row: #eef2ff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-day-row: #4338ca;
+      --border-color: #e2e8f0;
+      --accent-primary: #6366f1;
+      --accent-hover: #4f46e5;
+      --emerald-text: #059669;
+      --emerald-bg: #ecfdf5;
+      --danger-text: #ef4444;
+      --danger-bg: #fef2f2;
+      --shadow-card: 0 10px 30px -5px rgba(15, 23, 42, 0.06);
+      --header-bg: rgba(255, 255, 255, 0.88);
+    }
+
+    :root[data-theme="dark"] {
+      --bg-page: #090d16;
+      --bg-card: #111827;
+      --bg-input: #1e293b;
+      --bg-muted: #1f2937;
+      --bg-day-row: rgba(99, 102, 241, 0.15);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-day-row: #a5b4fc;
+      --border-color: #1f2937;
+      --accent-primary: #6366f1;
+      --accent-hover: #818cf8;
+      --emerald-text: #34d399;
+      --emerald-bg: rgba(16, 185, 129, 0.12);
+      --danger-text: #f87171;
+      --danger-bg: rgba(239, 68, 68, 0.15);
+      --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+      --header-bg: rgba(17, 24, 39, 0.88);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 20px;
+    }
+
+    .nav-container {
+      max-width: 1020px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.2rem;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    }
+
+    .brand span { color: var(--accent-primary); }
+
+    .theme-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-muted);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-btn:hover { border-color: var(--accent-primary); }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .hidden { display: none !important; }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+    input:disabled { background: var(--bg-muted); color: var(--text-muted); cursor: not-allowed; font-weight: 700; }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 18px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+    .btn-primary:hover { opacity: 0.95; transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: var(--bg-muted);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover { border-color: var(--text-muted); }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    }
+    .btn-emerald:hover { opacity: 0.95; transform: translateY(-1px); }
+
+    .auth-box { max-width: 430px; margin: 24px auto; }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: var(--bg-day-row);
+      color: var(--text-day-row);
+      margin-bottom: 12px;
+    }
+
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      border-radius: 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-card);
+    }
+
+    .stat-card.highlight {
+      background: linear-gradient(135deg, #6366f1, #4338ca);
+      color: #ffffff;
+      border: none;
+    }
+
+    .stat-value { font-size: 1.65rem; font-weight: 800; margin-top: 4px; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 110px 1fr 180px 220px;
+      gap: 14px;
+      align-items: end;
+    }
+    @media (max-width: 780px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .table-card { padding: 0; overflow: hidden; margin-top: 20px; }
+    .table-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .table-scroll { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      background: var(--bg-muted);
+      color: var(--text-muted);
+      font-size: 0.73rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    td { padding: 14px 20px; border-bottom: 1px solid var(--border-color); font-size: 0.92rem; }
+
+    .day-row td {
+      background: var(--bg-day-row);
+      color: var(--text-day-row);
+      font-weight: 800;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      padding: 10px 20px;
+    }
+
+    .amount-pill {
+      display: inline-block;
+      background: var(--emerald-bg);
+      color: var(--emerald-text);
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    .delete-btn {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .delete-btn:hover { opacity: 0.85; }
+
+    footer {
+      background: var(--header-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 20px;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .footer-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .heart-icon { color: #ef4444; display: inline-flex; animation: pulse 1.4s infinite; }
+    .author-name {
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.22); } }
+  </style>
 </head>
-<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
+<body>
 
-  <!-- TOP NAVIGATION BAR (Always Visible + Theme Toggle) -->
-  <header class="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-30 transition-colors duration-300">
-    <div class="max-w-5xl mx-auto px-4 py-3.5 flex justify-between items-center">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20">
-          ₹
-        </div>
-        <span class="font-bold text-lg tracking-tight text-zinc-900 dark:text-white">
-          Expense<span class="text-violet-600 dark:text-violet-400">Portal</span>
-        </span>
+  <!-- TOP NAVBAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-icon">₹</div>
+        <div>Expense<span>Portal</span></div>
       </div>
-
-      <!-- White / Dark Theme Toggle Button -->
-      <button onclick="toggleTheme()" id="themeToggleBtn"
-        class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-all shadow-sm">
+      <button class="theme-btn" onclick="toggleTheme()">
         <span id="themeIcon">🌙</span>
-        <span id="themeText">Dark Mode</span>
+        <span id="themeText">Dark Theme</span>
       </button>
     </div>
   </header>
 
-  <!-- MAIN CONTENT WRAPPER -->
-  <main class="flex-grow px-4 py-8">
-
-    <!-- SETUP REMINDER BANNER (Hides automatically once keys are pasted) -->
-    <div id="setupWarning" class="hidden max-w-2xl mx-auto mb-6 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 p-4 rounded-2xl text-sm shadow-sm">
-      <strong>⚠️ Almost done!</strong> Scroll down to the <code>&lt;script&gt;</code> section in <code>index.html</code> and paste your <strong>SUPABASE_URL</strong> and <strong>SUPABASE_ANON_KEY</strong>.
-    </div>
-
-    <!-- 1. LOGIN & REGISTRATION SCREEN -->
-    <div id="authSection" class="max-w-md mx-auto mt-8 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-8 rounded-3xl shadow-xl shadow-zinc-200/50 dark:shadow-none transition-colors duration-300">
-      <div class="text-center mb-6">
-        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 mb-3">
-          ☁️ Cloud Synced Portal
-        </span>
-        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Welcome Back</h1>
-        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Register or log in to manage your daily expenses</p>
-      </div>
-
-      <div class="space-y-4">
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- SETUP BOX -->
+    <div id="setupBox" class="card auth-box hidden" style="margin-bottom: 24px; border: 2px dashed #6366f1;">
+      <span class="badge">⚡ Vercel Cloud Setup</span>
+      <h2 style="font-size: 1.2rem; margin-bottom: 6px;">Connect Supabase Keys</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+        Paste your Supabase credentials below once. They will be stored safely in your browser.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">Username or Email</label>
-          <input id="usernameInput" type="text" placeholder="e.g. rahul or rahul@gmail.com"
-            class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          <label>Supabase Project URL</label>
+          <input id="inputSupabaseUrl" type="text" placeholder="https://xyzcompany.supabase.co" />
         </div>
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">Password (min 6 chars)</label>
-          <input id="passwordInput" type="password" placeholder="••••••••"
-            class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          <label>Supabase Anon / Publishable Key</label>
+          <input id="inputSupabaseKey" type="text" placeholder="eyJhbGciOiJIUzI1Ni..." />
         </div>
-
-        <p id="authMessage" class="text-sm font-medium hidden"></p>
-
-        <div class="flex gap-3 pt-3">
-          <button onclick="handleAuth('login')"
-            class="w-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold py-2.5 rounded-xl shadow-md shadow-indigo-500/20 transition">
-            Log In
-          </button>
-          <button onclick="handleAuth('register')"
-            class="w-1/2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-semibold py-2.5 rounded-xl transition">
-            Register
-          </button>
-        </div>
+        <button onclick="saveKeysFromUI()" class="btn btn-primary" style="width: 100%;">Save & Connect</button>
       </div>
     </div>
 
-    <!-- 2. MAIN EXPENSE DASHBOARD -->
-    <div id="appSection" class="max-w-5xl mx-auto hidden space-y-6">
+    <!-- AUTH SCREEN -->
+    <div id="authSection" class="card auth-box">
+      <div style="text-align: center; margin-bottom: 22px;">
+        <span class="badge">☁️ Cloud Synced Ledger</span>
+        <h1 style="font-size: 1.6rem; font-weight: 800;">Welcome</h1>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">Log in or register to manage your expenses</p>
+      </div>
 
-      <!-- User Bar & Summary Cards -->
-      <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-6 rounded-3xl shadow-sm flex flex-wrap justify-between items-center gap-4 transition-colors duration-300">
+      <div style="display: flex; flex-direction: column; gap: 15px;">
         <div>
-          <span class="text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">Personal Ledger</span>
-          <h1 class="text-2xl font-bold text-zinc-900 dark:text-white mt-0.5">Daily Expense Sheet</h1>
-          <p class="text-sm text-zinc-500 dark:text-zinc-400">Logged in as: <span id="currentUserDisplay" class="font-semibold text-zinc-800 dark:text-zinc-200"></span></p>
+          <label>Username or Email</label>
+          <input id="usernameInput" type="text" placeholder="e.g. purnendu" />
+        </div>
+        <div>
+          <label>Password (min 6 chars)</label>
+          <input id="passwordInput" type="password" placeholder="••••••••" />
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <button onclick="exportToCSV()"
-            class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center gap-2">
-            <span>📥</span> Export Sheet (.CSV)
-          </button>
-          <button onclick="logout()"
-            class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-semibold px-4 py-2.5 rounded-xl transition">
-            Logout
-          </button>
+        <p id="authMessage" class="hidden" style="font-size: 0.85rem; font-weight: 700;"></p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
+          <button onclick="handleAuth('login')" class="btn btn-primary">Log In</button>
+          <button onclick="handleAuth('register')" class="btn btn-secondary">Register</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="appSection" class="hidden">
+      <div class="card top-bar">
+        <div>
+          <span class="badge" style="margin-bottom: 6px;">Active Cloud Session</span>
+          <h1 style="font-size: 1.5rem; font-weight: 800;">Daily Expense Sheet</h1>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">
+            User: <strong id="currentUserDisplay" style="color: var(--accent-primary);"></strong>
+          </p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button onclick="exportToCSV()" class="btn btn-emerald">📥 Export Sheet (.CSV)</button>
+          <button onclick="logout()" class="btn btn-secondary">Logout</button>
         </div>
       </div>
 
-      <!-- Quick Stats Row -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-5 rounded-2xl shadow-sm">
-          <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Total Entries</p>
-          <p id="statEntriesCount" class="text-2xl font-bold text-zinc-900 dark:text-white mt-1">0</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <label>Total Items</label>
+          <div id="statEntriesCount" class="stat-value">0</div>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-5 rounded-2xl shadow-sm">
-          <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Today's Date</p>
-          <p id="statTodayDate" class="text-2xl font-bold text-violet-600 dark:text-violet-400 mt-1">--</p>
+        <div class="stat-card">
+          <label>Today's Date</label>
+          <div id="statTodayDate" class="stat-value" style="color: var(--accent-primary);">--</div>
         </div>
-        <div class="bg-gradient-to-br from-violet-600 to-indigo-600 p-5 rounded-2xl shadow-md shadow-indigo-500/10 text-white">
-          <p class="text-xs font-semibold uppercase tracking-wider text-violet-200">Grand Total Expensed</p>
-          <p id="totalAmountDisplay" class="text-2xl font-bold mt-1">0.00</p>
+        <div class="stat-card highlight">
+          <label style="color: #e0e7ff;">Grand Total Expensed</label>
+          <div id="totalAmountDisplay" class="stat-value">₹ 0.00</div>
         </div>
       </div>
 
-      <!-- Add Expense Form -->
-      <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-6 rounded-3xl shadow-sm transition-colors duration-300">
-        <h2 class="text-base font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-violet-500"></span> Write New Expense
-        </h2>
-        <form onsubmit="addExpense(event)" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-          <div class="md:col-span-2">
-            <label class="block text-xs font-semibold uppercase text-zinc-400 mb-1.5">Serial No.</label>
-            <input id="nextSerialPreview" type="text" disabled
-              class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 rounded-xl px-3 py-2.5 font-mono font-bold text-center" />
+      <div class="card">
+        <h2 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 16px;">✍️ Write New Expense</h2>
+        <form onsubmit="addExpense(event)" class="form-grid">
+          <div>
+            <label>Serial No.</label>
+            <input id="nextSerialPreview" type="text" disabled style="text-align: center;" />
           </div>
-          <div class="md:col-span-4">
-            <label class="block text-xs font-semibold uppercase text-zinc-600 dark:text-zinc-300 mb-1.5">Where Expensed</label>
-            <input id="expenseName" type="text" required placeholder="e.g. Tea, Bus Fare, Grocery"
-              class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          <div>
+            <label>Where Expensed</label>
+            <input id="expenseName" type="text" required placeholder="e.g. Coffee, Transport" />
           </div>
-          <div class="md:col-span-3">
-            <label class="block text-xs font-semibold uppercase text-zinc-600 dark:text-zinc-300 mb-1.5">Money Expensed</label>
-            <input id="expenseAmount" type="number" step="0.01" min="0.01" required placeholder="0.00"
-              class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          <div>
+            <label>Money Expensed</label>
+            <input id="expenseAmount" type="number" step="0.01" min="0.01" required placeholder="0.00" />
           </div>
-          <div class="md:col-span-3">
-            <label class="block text-xs font-semibold uppercase text-zinc-400 mb-1.5">Date (Auto)</label>
-            <div class="flex gap-2">
-              <input id="expenseDate" type="text" disabled
-                class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 rounded-xl px-3 py-2.5 text-xs font-mono" />
-              <button id="saveBtn" type="submit"
-                class="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-indigo-500/20 transition shrink-0">
-                + Save
-              </button>
+          <div>
+            <label>Date (Auto)</label>
+            <div style="display: flex; gap: 8px;">
+              <input id="expenseDate" type="text" disabled />
+              <button id="saveBtn" type="submit" class="btn btn-primary" style="flex-shrink: 0;">+ Save</button>
             </div>
           </div>
         </form>
       </div>
 
-      <!-- Expense History Table -->
-      <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
-        <div class="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-          <h2 class="text-base font-bold text-zinc-900 dark:text-white">Stored Expenses (Day by Day)</h2>
-          <span class="text-xs text-zinc-400">Auto-numbered sequence</span>
+      <div class="card table-card">
+        <div class="table-header">
+          <h2 style="font-size: 1.05rem; font-weight: 800;">📅 Stored Expenses (Day by Day)</h2>
+          <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Auto-numbered</span>
         </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+        <div class="table-scroll">
+          <table>
             <thead>
-              <tr class="bg-zinc-50/80 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 text-xs uppercase border-b border-zinc-200/80 dark:border-zinc-800">
-                <th class="py-3.5 px-5 w-28">Serial No.</th>
-                <th class="py-3.5 px-5">Where Expensed</th>
-                <th class="py-3.5 px-5">Money Expensed</th>
-                <th class="py-3.5 px-5">Date</th>
-                <th class="py-3.5 px-5 text-right">Action</th>
+              <tr>
+                <th style="width: 110px;">Serial No.</th>
+                <th>Where Expensed</th>
+                <th>Money Expensed</th>
+                <th>Date</th>
+                <th style="text-align: right;">Action</th>
               </tr>
             </thead>
-            <tbody id="expenseTableBody" class="divide-y divide-zinc-100 dark:divide-zinc-800/70 text-sm"></tbody>
+            <tbody id="expenseTableBody"></tbody>
           </table>
         </div>
       </div>
-
     </div>
   </main>
 
   <!-- FOOTER -->
-  <footer class="border-t border-zinc-200/80 dark:border-zinc-800/80 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm py-5 mt-12 transition-colors duration-300">
-    <div class="max-w-5xl mx-auto px-4 text-center">
-      <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400 flex items-center justify-center gap-1.5">
-        With
-        <span class="inline-block text-red-500 animate-pulse text-base" aria-label="love">❤️</span>
-        from <span class="font-bold bg-gradient-to-r from-violet-600 to-indigo-500 bg-clip-text text-transparent">Purnendu</span>
-      </p>
+  <footer>
+    <div class="footer-text">
+      <span>With</span>
+      <span class="heart-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+      </span>
+      <span>from <span class="author-name">Purnendu</span></span>
     </div>
   </footer>
 
   <script>
-    // ============================================================================
-    // PASTE YOUR 2 SUPABASE KEYS RIGHT HERE INSIDE THE QUOTES:
-    // ============================================================================
+    // OPTIONAL: Paste your keys directly here if you don't want to use the UI box
     const SUPABASE_URL = "https://hxgtmkqpdqzfzirkgkdb.supabase.co/rest/v1/";
     const SUPABASE_ANON_KEY = "sb_publishable_ac0m_HwMQ7JrFczmPQd6uQ_CfkyiVnd";
-    // ============================================================================
 
-    // --- THEME (WHITE / DARK) CONTROLLER ---
     function initTheme() {
-      const savedTheme = localStorage.getItem('portal_theme') || 'light';
-      applyTheme(savedTheme);
+      const saved = localStorage.getItem('purnendu_portal_theme') || 'light';
+      setTheme(saved);
     }
 
     function toggleTheme() {
-      const isDark = document.documentElement.classList.contains('dark');
-      applyTheme(isDark ? 'light' : 'dark');
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
     }
 
-    function applyTheme(theme) {
-      const htmlEl = document.documentElement;
-      const iconEl = document.getElementById('themeIcon');
-      const textEl = document.getElementById('themeText');
-
-      if (theme === 'dark') {
-        htmlEl.classList.add('dark');
-        iconEl.textContent = '☀️';
-        textEl.textContent = 'White Mode';
-      } else {
-        htmlEl.classList.remove('dark');
-        iconEl.textContent = '🌙';
-        textEl.textContent = 'Dark Mode';
-      }
-      localStorage.setItem('portal_theme', theme);
+    function setTheme(mode) {
+      document.documentElement.setAttribute('data-theme', mode);
+      localStorage.setItem('purnendu_portal_theme', mode);
+      document.getElementById('themeIcon').textContent = mode === 'dark' ? '☀️' : '🌙';
+      document.getElementById('themeText').textContent = mode === 'dark' ? 'White Theme' : 'Dark Theme';
     }
 
     initTheme();
 
-    // --- SUPABASE & APP LOGIC ---
     let supabaseClient = null;
     let currentUser = null;
     let cachedExpenses = [];
 
-    if (SUPABASE_URL.includes("PASTE_YOUR") || SUPABASE_ANON_KEY.includes("PASTE_YOUR")) {
-      document.getElementById('setupWarning').classList.remove('hidden');
-    } else {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    function getActiveKeys() {
+      const url = !CODE_SUPABASE_URL.includes("PASTE_YOUR") ? CODE_SUPABASE_URL : localStorage.getItem('saved_sb_url') || '';
+      const key = !CODE_SUPABASE_KEY.includes("PASTE_YOUR") ? CODE_SUPABASE_KEY : localStorage.getItem('saved_sb_key') || '';
+      return { url: url.trim(), key: key.trim() };
+    }
+
+    function initSupabase() {
+      const { url, key } = getActiveKeys();
+      if (!url || !key) {
+        document.getElementById('setupBox').classList.remove('hidden');
+        return;
+      }
+      document.getElementById('setupBox').classList.add('hidden');
+      supabaseClient = window.supabase.createClient(url, key);
       checkExistingSession();
     }
 
-    function getTodayDate() {
-      const today = new Date();
-      return today.toISOString().split('T')[0];
+    function saveKeysFromUI() {
+      const url = document.getElementById('inputSupabaseUrl').value.trim();
+      const key = document.getElementById('inputSupabaseKey').value.trim();
+      if (!url.startsWith('http') || key.length < 15) {
+        alert('Please enter a valid Supabase Project URL and Key.');
+        return;
+      }
+      localStorage.setItem('saved_sb_url', url);
+      localStorage.setItem('saved_sb_key', key);
+      initSupabase();
     }
 
+    initSupabase();
+
+    function getTodayDate() { return new Date().toISOString().split('T')[0]; }
     function formatToEmail(input) {
       const clean = input.trim().toLowerCase();
       return clean.includes('@') ? clean : `${clean}@expenseportal.local`;
     }
-
     function displayFriendlyName(email) {
-      return email.endsWith('@expenseportal.local')
-        ? email.replace('@expenseportal.local', '')
-        : email;
+      return email.endsWith('@expenseportal.local') ? email.replace('@expenseportal.local', '') : email;
     }
 
     async function checkExistingSession() {
@@ -277,46 +566,37 @@
     }
 
     async function handleAuth(mode) {
-      if (!supabaseClient) {
-        alert("Please paste your SUPABASE_URL and SUPABASE_ANON_KEY in index.html first!");
-        return;
-      }
-
+      if (!supabaseClient) { alert('Please connect your Supabase credentials first!'); return; }
       const rawUsername = document.getElementById('usernameInput').value;
       const password = document.getElementById('passwordInput').value;
       const msgEl = document.getElementById('authMessage');
-      msgEl.className = 'text-sm font-medium text-red-500';
+      msgEl.style.color = '#ef4444';
 
       if (!rawUsername.trim() || !password) {
         msgEl.textContent = 'Please enter both username and password.';
         msgEl.classList.remove('hidden');
         return;
       }
-
       if (password.length < 6) {
-        msgEl.textContent = 'Password must be at least 6 characters long.';
+        msgEl.textContent = 'Password must be at least 6 characters.';
         msgEl.classList.remove('hidden');
         return;
       }
 
       const email = formatToEmail(rawUsername);
-      msgEl.className = 'text-sm font-medium text-violet-600 dark:text-violet-400';
-      msgEl.textContent = mode === 'register' ? 'Creating your cloud account...' : 'Logging in...';
+      msgEl.style.color = '#6366f1';
+      msgEl.textContent = mode === 'register' ? 'Creating account...' : 'Logging in...';
       msgEl.classList.remove('hidden');
 
-      let result;
-      if (mode === 'register') {
-        result = await supabaseClient.auth.signUp({ email, password });
-      } else {
-        result = await supabaseClient.auth.signInWithPassword({ email, password });
-      }
+      const result = mode === 'register'
+        ? await supabaseClient.auth.signUp({ email, password })
+        : await supabaseClient.auth.signInWithPassword({ email, password });
 
       if (result.error) {
-        msgEl.className = 'text-sm font-medium text-red-500';
+        msgEl.style.color = '#ef4444';
         msgEl.textContent = result.error.message;
         return;
       }
-
       if (result.data.user) {
         currentUser = result.data.user;
         msgEl.classList.add('hidden');
@@ -335,9 +615,7 @@
     }
 
     async function logout() {
-      if (supabaseClient) {
-        await supabaseClient.auth.signOut();
-      }
+      if (supabaseClient) await supabaseClient.auth.signOut();
       currentUser = null;
       cachedExpenses = [];
       document.getElementById('usernameInput').value = '';
@@ -348,18 +626,14 @@
 
     async function loadExpensesFromCloud() {
       const tbody = document.getElementById('expenseTableBody');
-      tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-zinc-400">Loading your cloud expenses...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 36px; color: var(--text-muted);">Loading expenses...</td></tr>`;
 
       const { data, error } = await supabaseClient
         .from('expenses')
         .select('*')
         .order('created_at', { ascending: true });
 
-      if (error) {
-        alert('Error loading expenses: ' + error.message);
-        return;
-      }
-
+      if (error) { alert('Error: ' + error.message); return; }
       cachedExpenses = data || [];
       renderExpenses();
     }
@@ -373,23 +647,17 @@
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving...';
 
-      const { error } = await supabaseClient.from('expenses').insert([
-        {
-          user_id: currentUser.id,
-          expense_name: nameInput.value.trim(),
-          amount: parseFloat(amountInput.value),
-          expense_date: getTodayDate()
-        }
-      ]);
+      const { error } = await supabaseClient.from('expenses').insert([{
+        user_id: currentUser.id,
+        expense_name: nameInput.value.trim(),
+        amount: parseFloat(amountInput.value),
+        expense_date: getTodayDate()
+      }]);
 
       saveBtn.disabled = false;
       saveBtn.textContent = '+ Save';
 
-      if (error) {
-        alert('Could not save expense: ' + error.message);
-        return;
-      }
-
+      if (error) { alert('Could not save: ' + error.message); return; }
       nameInput.value = '';
       amountInput.value = '';
       nameInput.focus();
@@ -397,16 +665,8 @@
     }
 
     async function deleteExpense(id) {
-      const { error } = await supabaseClient
-        .from('expenses')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        alert('Could not delete: ' + error.message);
-        return;
-      }
-
+      const { error } = await supabaseClient.from('expenses').delete().eq('id', id);
+      if (error) { alert('Could not delete: ' + error.message); return; }
       await loadExpensesFromCloud();
     }
 
@@ -418,20 +678,13 @@
       document.getElementById('statEntriesCount').textContent = cachedExpenses.length;
 
       let grandTotal = 0;
-
       if (cachedExpenses.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" class="py-12 text-center text-zinc-400 dark:text-zinc-500">
-              No expenses recorded yet. Write your first expense above!
-            </td>
-          </tr>`;
-        document.getElementById('totalAmountDisplay').textContent = '0.00';
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 42px; color: var(--text-muted);">No expenses recorded yet.</td></tr>`;
+        document.getElementById('totalAmountDisplay').textContent = '₹ 0.00';
         return;
       }
 
       let lastDate = null;
-
       cachedExpenses.forEach((item, index) => {
         const serialNo = index + 1;
         const amountNum = parseFloat(item.amount);
@@ -440,41 +693,27 @@
         if (item.expense_date !== lastDate) {
           lastDate = item.expense_date;
           const dayHeader = document.createElement('tr');
-          dayHeader.className = 'bg-violet-50/70 dark:bg-violet-950/30';
-          dayHeader.innerHTML = `
-            <td colspan="5" class="py-2.5 px-5 text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
-              📅 Date: ${item.expense_date}
-            </td>
-          `;
+          dayHeader.className = 'day-row';
+          dayHeader.innerHTML = `<td colspan="5">📅 Date: ${item.expense_date}</td>`;
           tbody.appendChild(dayHeader);
         }
 
         const row = document.createElement('tr');
-        row.className = 'hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition';
         row.innerHTML = `
-          <td class="py-3.5 px-5 font-mono font-semibold text-zinc-500 dark:text-zinc-400">#${serialNo}</td>
-          <td class="py-3.5 px-5 font-medium text-zinc-900 dark:text-zinc-100">${escapeHTML(item.expense_name)}</td>
-          <td class="py-3.5 px-5 font-bold text-emerald-600 dark:text-emerald-400">${amountNum.toFixed(2)}</td>
-          <td class="py-3.5 px-5 text-zinc-500 dark:text-zinc-400 font-mono text-xs">${item.expense_date}</td>
-          <td class="py-3.5 px-5 text-right">
-            <button onclick="deleteExpense('${item.id}')"
-              class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs font-semibold px-2.5 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 transition">
-              Delete
-            </button>
-          </td>
+          <td style="font-weight: 800; color: var(--text-muted);">#${serialNo}</td>
+          <td style="font-weight: 700;">${escapeHTML(item.expense_name)}</td>
+          <td><span class="amount-pill">₹ ${amountNum.toFixed(2)}</span></td>
+          <td style="color: var(--text-muted); font-size: 0.85rem;">${item.expense_date}</td>
+          <td style="text-align: right;"><button class="delete-btn" onclick="deleteExpense('${item.id}')">Delete</button></td>
         `;
         tbody.appendChild(row);
       });
 
-      document.getElementById('totalAmountDisplay').textContent = grandTotal.toFixed(2);
+      document.getElementById('totalAmountDisplay').textContent = '₹ ' + grandTotal.toFixed(2);
     }
 
     function exportToCSV() {
-      if (cachedExpenses.length === 0) {
-        alert('Please add at least one expense before exporting!');
-        return;
-      }
-
+      if (cachedExpenses.length === 0) { alert('No expenses to export!'); return; }
       let csvContent = 'Serial No.,Where Expensed,Money Expensed,Date\n';
       let total = 0;
 
@@ -487,22 +726,18 @@
       });
 
       csvContent += `\n,TOTAL EXPENSED,${total.toFixed(2)},\n`;
-
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      const userName = displayFriendlyName(currentUser.email);
       link.setAttribute('href', url);
-      link.setAttribute('download', `Expense_Sheet_${userName}_${getTodayDate()}.csv`);
+      link.setAttribute('download', `Expense_Sheet_${displayFriendlyName(currentUser.email)}_${getTodayDate()}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
     function escapeHTML(str) {
-      return str.replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[m]));
+      return str.replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
     }
   </script>
 </body>
