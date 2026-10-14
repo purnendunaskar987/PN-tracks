@@ -391,6 +391,214 @@
     }
     .delete-btn:hover { opacity: 0.85; }
 
+    .chat-card {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: min(420px, calc(100vw - 24px));
+      max-height: 78vh;
+      margin-top: 0;
+      padding: 0;
+      overflow: hidden;
+      z-index: 60;
+      border-radius: 16px;
+      box-shadow: 0 22px 40px -18px rgba(0, 0, 0, 0.32);
+      transition: width 0.2s ease, height 0.2s ease, transform 0.2s ease;
+    }
+
+    .chat-toggle-bubble {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 61;
+      border: none;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
+      color: #fff;
+      width: min(238px, calc(100vw - 32px));
+      min-height: 68px;
+      padding: 10px 14px 10px 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+      box-shadow: 0 16px 34px -18px rgba(0, 0, 0, 0.48);
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .chat-toggle-bubble:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 38px -18px rgba(0, 0, 0, 0.52);
+    }
+
+    .chat-launcher-icon {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .chat-launcher-copy {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .chat-launcher-name {
+      font-size: 0.92rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .chat-launcher-prompt {
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 0.74rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .chat-card.is-minimized {
+      width: min(300px, calc(100vw - 24px));
+      max-height: 66px;
+    }
+
+    .chat-card.is-minimized .chat-body,
+    .chat-card.is-minimized .chat-form {
+      display: none;
+    }
+
+    .chat-header {
+      min-height: 76px;
+      padding: 15px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
+      color: #fff;
+    }
+
+    .chat-header > div:first-child {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .chat-header h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .chat-header span {
+      font-size: 0.76rem;
+      color: rgba(255, 255, 255, 0.82);
+      font-weight: 600;
+    }
+
+    .chat-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chat-mini-btn {
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .chat-mini-btn:hover {
+      border-color: rgba(255, 255, 255, 0.55);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .chat-mini-btn:focus-visible,
+    .chat-toggle-bubble:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 3px;
+    }
+
+    .chat-body {
+      display: block;
+    }
+
+    .chat-messages {
+      max-height: min(360px, 42vh);
+      overflow-y: auto;
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--bg-input);
+    }
+
+    .chat-bubble {
+      max-width: 88%;
+      padding: 11px 14px;
+      border-radius: 13px;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      white-space: pre-line;
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
+      color: #fff;
+      border-bottom-right-radius: 5px;
+    }
+
+    .chat-bubble.bot {
+      align-self: flex-start;
+      background: var(--bg-muted);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-bottom-left-radius: 5px;
+    }
+
+    .chat-form {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border-color);
+      background: var(--bg-card);
+    }
+
+    .chat-form input {
+      flex: 1;
+      min-width: 0;
+      border-radius: 11px;
+    }
+
+    .chat-form .btn { flex-shrink: 0; }
+
+    @media (max-width: 640px) {
+      .chat-card {
+        right: 12px;
+        left: 12px;
+        width: auto;
+      }
+      .chat-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
     footer {
       position: relative;
       z-index: 1;
@@ -549,6 +757,36 @@
         </div>
       </div>
 
+      <div id="expantWidget" class="card chat-card hidden">
+        <div class="chat-header">
+          <div>
+            <h2>Expant</h2>
+            <span>Your Expense Assistant</span>
+          </div>
+          <div class="chat-header-actions">
+            <button type="button" class="chat-mini-btn" aria-label="Minimize assistant" title="Minimize" onclick="this.closest('.chat-card').classList.toggle('is-minimized')"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+            <button type="button" class="chat-mini-btn" aria-label="Close assistant" title="Close" onclick="var w=this.closest('.chat-card'); w.classList.add('hidden'); document.getElementById('expantOpenButton').classList.remove('hidden');"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m18 6-12 12M6 6l12 12"/></svg></button>
+          </div>
+        </div>
+        <div class="chat-body">
+          <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+          <form id="chatForm" class="chat-form">
+            <input id="chatInput" type="text" placeholder="Ask about your expenses..." aria-label="Chat with Expant" />
+            <button class="btn btn-primary" type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+
+      <button id="expantOpenButton" type="button" class="chat-toggle-bubble hidden" aria-label="Open Expant, your expense assistant" title="Expant - Your Expense Assistant" onclick="var w=document.getElementById('expantWidget'); w.classList.remove('hidden'); w.classList.remove('is-minimized'); document.getElementById('expantOpenButton').classList.add('hidden'); showExpantWelcome();">
+        <span class="chat-launcher-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg>
+        </span>
+        <span class="chat-launcher-copy">
+          <span class="chat-launcher-name">Chat with Expant</span>
+          <span class="chat-launcher-prompt">Ask about your expenses</span>
+        </span>
+      </button>
+
       <div class="card">
         <h2 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 16px;">✍️ Write New Expense</h2>
         <form onsubmit="addExpense(event)" class="form-grid">
@@ -569,6 +807,7 @@
             <div style="display: flex; gap: 8px;">
               <input id="expenseDate" type="text" disabled />
               <button id="saveBtn" type="submit" class="btn btn-primary" style="flex-shrink: 0;">+ Save</button>
+              <button id="cancelEditBtn" type="button" class="btn btn-secondary hidden" style="flex-shrink: 0;" onclick="cancelEditExpense()">Cancel</button>
             </div>
           </div>
         </form>
@@ -632,11 +871,14 @@
     }
 
     initTheme();
+    localStorage.removeItem('expant_gemini_key');
 
     let supabaseClient = null;
     let currentUser = null;
     let cachedExpenses = [];
     let isPasswordRecovery = false;
+    let editingExpenseId = null;
+    let editingExpenseIdField = 'id';
 
     function getActiveKeys() {
       const url = !SUPABASE_URL.includes("PASTE_YOUR") ? SUPABASE_URL : localStorage.getItem('saved_sb_url') || '';
@@ -825,9 +1067,12 @@
       const today = getTodayDate();
       document.getElementById('authSection').classList.add('hidden');
       document.getElementById('appSection').classList.remove('hidden');
+      document.getElementById('expantWidget').classList.remove('hidden');
+      document.getElementById('expantOpenButton').classList.add('hidden');
       document.getElementById('currentUserDisplay').textContent = displayFriendlyName(currentUser.email);
       document.getElementById('expenseDate').value = today;
       document.getElementById('statTodayDate').textContent = today;
+      showExpantWelcome();
       loadExpensesFromCloud();
     }
 
@@ -839,6 +1084,8 @@
       document.getElementById('passwordInput').value = '';
       document.getElementById('appSection').classList.add('hidden');
       document.getElementById('authSection').classList.remove('hidden');
+      document.getElementById('expantWidget').classList.add('hidden');
+      document.getElementById('expantOpenButton').classList.add('hidden');
     }
 
     async function loadExpensesFromCloud() {
@@ -861,6 +1108,10 @@
       const amountInput = document.getElementById('expenseAmount');
       const saveBtn = document.getElementById('saveBtn');
 
+      if (editingExpenseId) {
+        return updateExpense(editingExpenseId);
+      }
+
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving...';
 
@@ -881,9 +1132,91 @@
       await loadExpensesFromCloud();
     }
 
-    async function deleteExpense(id) {
-      const { error } = await supabaseClient.from('expenses').delete().eq('id', id);
+    function resetExpenseForm() {
+      editingExpenseId = null;
+      editingExpenseIdField = 'id';
+      const nameInput = document.getElementById('expenseName');
+      const amountInput = document.getElementById('expenseAmount');
+      const saveBtn = document.getElementById('saveBtn');
+      const cancelEditBtn = document.getElementById('cancelEditBtn');
+      const dateInput = document.getElementById('expenseDate');
+
+      nameInput.value = '';
+      amountInput.value = '';
+      dateInput.value = getTodayDate();
+      saveBtn.textContent = '+ Save';
+      cancelEditBtn.classList.add('hidden');
+      cancelEditBtn.disabled = false;
+    }
+
+    function getExpenseIdField(item) {
+      if (item.id !== undefined && item.id !== null && item.id !== '') return 'id';
+      if (item.expense_id !== undefined && item.expense_id !== null && item.expense_id !== '') return 'expense_id';
+      return null;
+    }
+
+    function startEditExpense(item) {
+      editingExpenseIdField = getExpenseIdField(item);
+      if (!editingExpenseIdField) {
+        alert('Could not edit this expense because its record ID is missing.');
+        return;
+      }
+      editingExpenseId = item[editingExpenseIdField];
+      const nameInput = document.getElementById('expenseName');
+      const amountInput = document.getElementById('expenseAmount');
+      const saveBtn = document.getElementById('saveBtn');
+      const cancelEditBtn = document.getElementById('cancelEditBtn');
+      const dateInput = document.getElementById('expenseDate');
+
+      nameInput.value = item.expense_name || '';
+      amountInput.value = parseFloat(item.amount || 0).toFixed(2);
+      dateInput.value = item.expense_date || getTodayDate();
+      saveBtn.textContent = 'Update';
+      cancelEditBtn.classList.remove('hidden');
+      nameInput.focus();
+    }
+
+    async function updateExpense(id) {
+      const nameInput = document.getElementById('expenseName');
+      const amountInput = document.getElementById('expenseAmount');
+      const saveBtn = document.getElementById('saveBtn');
+
+      if (!nameInput.value.trim() || !amountInput.value || Number(amountInput.value) <= 0) {
+        alert('Please enter a valid expense name and amount.');
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Updating...';
+
+      const { error } = await supabaseClient
+        .from('expenses')
+        .update({
+          expense_name: nameInput.value.trim(),
+          amount: parseFloat(amountInput.value),
+          expense_date: document.getElementById('expenseDate').value || getTodayDate()
+        })
+        .eq(editingExpenseIdField, id);
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Update';
+
+      if (error) { alert('Could not update: ' + error.message); return; }
+
+      resetExpenseForm();
+      await loadExpensesFromCloud();
+    }
+
+    function cancelEditExpense() {
+      resetExpenseForm();
+    }
+
+    async function deleteExpense(id, idField = 'id') {
+      const { error } = await supabaseClient.from('expenses').delete().eq(idField, id);
       if (error) { alert('Could not delete: ' + error.message); return; }
+      if (editingExpenseId === id) {
+        resetExpenseForm();
+      }
       await loadExpensesFromCloud();
     }
 
@@ -921,13 +1254,240 @@
           <td style="font-weight: 700;">${escapeHTML(item.expense_name)}</td>
           <td><span class="amount-pill">₹ ${amountNum.toFixed(2)}</span></td>
           <td style="color: var(--text-muted); font-size: 0.85rem;">${item.expense_date}</td>
-          <td style="text-align: right;"><button class="delete-btn" onclick="deleteExpense('${item.id}')">Delete</button></td>
         `;
+        const actionCell = document.createElement('td');
+        actionCell.style.cssText = 'text-align: right; display: flex; justify-content: flex-end; gap: 8px;';
+        const editButton = document.createElement('button');
+        editButton.className = 'delete-btn';
+        editButton.textContent = 'Edit';
+        editButton.addEventListener('click', () => startEditExpense(item));
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'delete-btn';
+        deleteButton.textContent = 'Delete';
+        const idField = getExpenseIdField(item);
+        deleteButton.disabled = !idField;
+        deleteButton.addEventListener('click', () => {
+          if (idField) deleteExpense(item[idField], idField);
+        });
+        actionCell.append(editButton, deleteButton);
+        row.appendChild(actionCell);
         tbody.appendChild(row);
       });
 
       document.getElementById('totalAmountDisplay').textContent = '₹ ' + grandTotal.toFixed(2);
     }
+
+    function formatCurrency(value) {
+      return '₹ ' + Number(value || 0).toFixed(2);
+    }
+
+    function appendChatMessage(role, message) {
+      const container = document.getElementById('chatMessages');
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${role}`;
+      bubble.textContent = message;
+      container.appendChild(bubble);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function showExpantWelcome() {
+      const container = document.getElementById('chatMessages');
+      if (!container) return;
+      container.innerHTML = '';
+      appendChatMessage('bot', 'Hi, welcome to expense portal');
+      appendChatMessage('bot', 'I can help you track your spending, answer questions from your saved expenses, and add new expenses by chat.');
+    }
+
+    function toggleExpantMinimize() {
+      const widget = document.getElementById('expantWidget');
+      if (!widget) return;
+      widget.classList.toggle('is-minimized');
+    }
+
+    function closeExpantChat() {
+      const widget = document.getElementById('expantWidget');
+      const bubble = document.getElementById('expantOpenButton');
+      if (!widget) return;
+      widget.classList.add('hidden');
+      if (bubble) bubble.classList.remove('hidden');
+    }
+
+    function openExpantChat() {
+      const widget = document.getElementById('expantWidget');
+      const bubble = document.getElementById('expantOpenButton');
+      if (!widget) return;
+      widget.classList.remove('hidden');
+      widget.classList.remove('is-minimized');
+      if (bubble) bubble.classList.add('hidden');
+      showExpantWelcome();
+    }
+
+    function parseAddExpenseText(query) {
+      const normalized = query.trim();
+      if (!normalized) return null;
+
+      const cleaned = normalized
+        .replace(/^(?:please|can you|kindly)\s+/i, '')
+        .replace(/[?!.]+$/g, '')
+        .trim();
+
+      const amountFirst = cleaned.match(/^add\s+(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:for|on|to|about)\s+(.+)$/i);
+      if (amountFirst) {
+        const amount = Number(amountFirst[1]);
+        const label = amountFirst[2].replace(/[?.!,]+$/g, '').trim();
+        if (Number.isFinite(amount) && label && amount > 0) return { amount, label };
+      }
+
+      const labelFirst = cleaned.match(/^add\s+(?:an?\s+)?(.+?)\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*$/i);
+      if (labelFirst) {
+        const label = labelFirst[1].replace(/^(?:for|on|to|about)\s+/i, '').replace(/[?.!,]+$/g, '').trim();
+        const amount = Number(labelFirst[2]);
+        if (Number.isFinite(amount) && label && amount > 0) return { amount, label };
+      }
+
+      const direct = cleaned.match(/^(.+?)\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*$/i);
+      if (direct && !cleaned.toLowerCase().startsWith('add ') && direct[1] && direct[2]) {
+        const label = direct[1].replace(/^(?:for|on|to|about)\s+/i, '').trim();
+        const amount = Number(direct[2]);
+        if (label && Number.isFinite(amount) && amount > 0) return { amount, label };
+      }
+
+      return null;
+    }
+
+    function summarizeExpenseQuery(query) {
+      const text = query.toLowerCase();
+      const expenses = cachedExpenses || [];
+      const today = getTodayDate();
+      const monthToday = new Date();
+
+      if (text.includes('add ') || text.includes('record ') || text.includes('save ') || text.includes('log ') || text.includes('spent ') || text.includes('spend ')) {
+        const parsed = parseAddExpenseText(query);
+        if (parsed) {
+          return { action: 'add', payload: parsed };
+        }
+      }
+
+      if (text.includes('today')) {
+        const list = expenses.filter(item => item.expense_date === today);
+        const total = list.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+        if (!list.length) return 'You have no recorded expenses for today yet.';
+        return `You spent ${formatCurrency(total)} today across ${list.length} item${list.length > 1 ? 's' : ''}.`;
+      }
+
+      if (text.includes('this month') || text.includes('month')) {
+        const monthly = expenses.filter(item => {
+          const d = new Date(item.expense_date + 'T00:00:00');
+          return d.getMonth() === monthToday.getMonth() && d.getFullYear() === monthToday.getFullYear();
+        });
+        const total = monthly.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+        if (!monthly.length) return 'You have no expenses recorded this month.';
+        return `This month, you have spent ${formatCurrency(total)} across ${monthly.length} expense${monthly.length > 1 ? 's' : ''}.`;
+      }
+
+      if (text.includes('total') || text.includes('overall') || text.includes('grand total')) {
+        const total = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+        return `Your total recorded spending is ${formatCurrency(total)} across ${expenses.length} expense${expenses.length === 1 ? '' : 's'}.`;
+      }
+
+      if (text.includes('highest') || text.includes('largest') || text.includes('max')) {
+        if (!expenses.length) return 'There are no expenses saved yet to compare.';
+        const highest = expenses.reduce((winner, item) => Number(item.amount || 0) > Number(winner.amount || 0) ? item : winner, expenses[0]);
+        return `Your largest expense is ${escapeHTML(highest.expense_name)} at ${formatCurrency(highest.amount)} on ${highest.expense_date}.`;
+      }
+
+      if (text.includes('recent') || text.includes('latest') || text.includes('last expense')) {
+        if (!expenses.length) return 'There are no expenses saved yet.';
+        const latest = [...expenses].sort((a, b) => new Date(b.expense_date) - new Date(a.expense_date))[0];
+        return `Your latest expense was ${escapeHTML(latest.expense_name)} for ${formatCurrency(latest.amount)} on ${latest.expense_date}.`;
+      }
+
+      if (text.includes('count') || text.includes('how many')) {
+        return `You currently have ${expenses.length} saved expense${expenses.length === 1 ? '' : 's'}.`;
+      }
+
+      const searchTerm = text.replace(/(what|how|when|did|i|spent|spend|my|you|have|on|for|in|this|that|show|me|is|are|the)/g, '').trim();
+      if (searchTerm) {
+        const matches = expenses.filter(item => item.expense_name.toLowerCase().includes(searchTerm));
+        if (!matches.length) return `I couldn’t find any saved spending matching “${searchTerm}”.`;
+        const total = matches.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+        return `You spent ${formatCurrency(total)} on “${searchTerm}” across ${matches.length} record${matches.length === 1 ? '' : 's'}.`;
+      }
+
+      return 'I can answer things like total spent, today’s spending, biggest expense, or help you add a new expense by saying “Add coffee ₹120”.';
+    }
+
+    async function fetchGeminiExpenseAnswer(query) {
+      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error('Your session has expired. Please log in again.');
+      }
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ question: query })
+      });
+
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json.error || 'Gemini request failed.');
+      }
+      return json.answer || 'I could not generate a reliable answer from your expense data.';
+    }
+
+    async function handleExpenseChatSubmit(event) {
+      event.preventDefault();
+      const input = document.getElementById('chatInput');
+      const query = input.value.trim();
+      if (!query) return;
+
+      appendChatMessage('user', query);
+      input.value = '';
+
+      if (!supabaseClient || !currentUser) {
+        appendChatMessage('bot', 'Please log in first so I can read your saved expenses.');
+        return;
+      }
+
+      const parsed = parseAddExpenseText(query);
+      if (parsed) {
+        const { amount, label } = parsed;
+        const insertData = {
+          user_id: currentUser.id,
+          expense_name: label,
+          amount,
+          expense_date: getTodayDate()
+        };
+
+        try {
+          appendChatMessage('bot', `I’m adding “${label}” for ${formatCurrency(amount)} to your expenses.`);
+          const { error } = await supabaseClient.from('expenses').insert([insertData]);
+          if (error) {
+            appendChatMessage('bot', `I couldn’t save it: ${error.message}`);
+            return;
+          }
+          await loadExpensesFromCloud();
+          appendChatMessage('bot', `Added successfully: ${label} for ${formatCurrency(amount)}.`);
+        } catch (err) {
+          appendChatMessage('bot', 'I hit an issue while saving your expense. Please try again.');
+        }
+        return;
+      }
+
+      try {
+        appendChatMessage('bot', 'Checking your expense data...');
+        const answer = await fetchGeminiExpenseAnswer(query);
+        appendChatMessage('bot', answer);
+      } catch (err) {
+        appendChatMessage('bot', `Gemini is unavailable right now. ${summarizeExpenseQuery(query)}`);
+      }
+    }
+
+    document.getElementById('chatForm')?.addEventListener('submit', handleExpenseChatSubmit);
 
     function exportToCSV() {
       if (cachedExpenses.length === 0) { alert('No expenses to export!'); return; }
@@ -954,7 +1514,7 @@
     }
 
     function escapeHTML(str) {
-      return str.replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
+      return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
     }
   </script>
   <script>
