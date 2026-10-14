@@ -1,128 +1,206 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily Expense Portal (Cloud)</title>
+  <title>Daily Expense Portal</title>
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS with Dark Mode enabled -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Load Supabase Cloud Library -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Supabase Cloud Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans text-slate-800">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
 
-  <!-- SETUP REMINDER BANNER (Hides automatically once you paste your keys) -->
-  <div id="setupWarning" class="hidden max-w-2xl mx-auto mt-6 bg-amber-50 border border-amber-300 text-amber-900 p-4 rounded-xl text-sm">
-    <strong>⚠️ Almost done!</strong> Open <code>index.html</code> in VS Code, scroll down to <strong>Line 128</strong>, and paste your <strong>SUPABASE_URL</strong> and <strong>SUPABASE_ANON_KEY</strong>.
-  </div>
+  <!-- TOP NAVIGATION BAR (Always Visible + Theme Toggle) -->
+  <header class="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-30 transition-colors duration-300">
+    <div class="max-w-5xl mx-auto px-4 py-3.5 flex justify-between items-center">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20">
+          ₹
+        </div>
+        <span class="font-bold text-lg tracking-tight text-zinc-900 dark:text-white">
+          Expense<span class="text-violet-600 dark:text-violet-400">Portal</span>
+        </span>
+      </div>
 
-  <!-- 1. LOGIN & REGISTRATION SCREEN -->
-  <div id="authSection" class="max-w-md mx-auto mt-16 bg-white p-8 rounded-2xl shadow-lg">
-    <h1 class="text-2xl font-bold text-center text-indigo-600 mb-2">Expense Tracker Portal</h1>
-    <p class="text-sm text-center text-slate-500 mb-6">Cloud Edition — Log in from any device</p>
-
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium mb-1">Username or Email</label>
-        <input id="usernameInput" type="text" placeholder="e.g. rahul or rahul@gmail.com"
-          class="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Password (at least 6 characters)</label>
-        <input id="passwordInput" type="password" placeholder="Enter at least 6 characters"
-          class="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-      </div>
-      <p id="authMessage" class="text-sm hidden"></p>
-      <div class="flex gap-3 pt-2">
-        <button id="loginBtn" onclick="handleAuth('login')"
-          class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition">
-          Log In
-        </button>
-        <button id="registerBtn" onclick="handleAuth('register')"
-          class="w-1/2 bg-slate-800 hover:bg-slate-900 text-white font-medium py-2.5 rounded-lg transition">
-          Register New User
-        </button>
-      </div>
+      <!-- White / Dark Theme Toggle Button -->
+      <button onclick="toggleTheme()" id="themeToggleBtn"
+        class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-all shadow-sm">
+        <span id="themeIcon">🌙</span>
+        <span id="themeText">Dark Mode</span>
+      </button>
     </div>
-  </div>
+  </header>
 
-  <!-- 2. MAIN EXPENSE DASHBOARD -->
-  <div id="appSection" class="max-w-4xl mx-auto my-10 px-4 hidden">
-    <!-- Top Bar -->
-    <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-wrap justify-between items-center gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800">Daily Expense Sheet</h1>
-        <p class="text-sm text-slate-500">Logged in as: <span id="currentUserDisplay" class="font-semibold text-indigo-600"></span></p>
-      </div>
-      <div class="flex items-center gap-3">
-        <button onclick="exportToCSV()"
-          class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm transition">
-          📥 Export Sheet (Excel / CSV)
-        </button>
-        <button onclick="logout()"
-          class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-lg transition">
-          Logout
-        </button>
-      </div>
+  <!-- MAIN CONTENT WRAPPER -->
+  <main class="flex-grow px-4 py-8">
+
+    <!-- SETUP REMINDER BANNER (Hides automatically once keys are pasted) -->
+    <div id="setupWarning" class="hidden max-w-2xl mx-auto mb-6 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 p-4 rounded-2xl text-sm shadow-sm">
+      <strong>⚠️ Almost done!</strong> Scroll down to the <code>&lt;script&gt;</code> section in <code>index.html</code> and paste your <strong>SUPABASE_URL</strong> and <strong>SUPABASE_ANON_KEY</strong>.
     </div>
 
-    <!-- Add Expense Form -->
-    <div class="bg-white p-6 rounded-2xl shadow-sm mb-6">
-      <h2 class="text-lg font-semibold mb-4">Write New Expense</h2>
-      <form onsubmit="addExpense(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+    <!-- 1. LOGIN & REGISTRATION SCREEN -->
+    <div id="authSection" class="max-w-md mx-auto mt-8 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-8 rounded-3xl shadow-xl shadow-zinc-200/50 dark:shadow-none transition-colors duration-300">
+      <div class="text-center mb-6">
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 mb-3">
+          ☁️ Cloud Synced Portal
+        </span>
+        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Welcome Back</h1>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Register or log in to manage your daily expenses</p>
+      </div>
+
+      <div class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Serial No. (Auto)</label>
-          <input id="nextSerialPreview" type="text" disabled
-            class="w-full bg-slate-100 border border-slate-200 text-slate-500 rounded-lg px-3 py-2 font-mono font-bold" />
+          <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">Username or Email</label>
+          <input id="usernameInput" type="text" placeholder="e.g. rahul or rahul@gmail.com"
+            class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
         </div>
         <div>
-          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Where Expensed</label>
-          <input id="expenseName" type="text" required placeholder="e.g. Tea, Bus Fare, Lunch"
-            class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">Password (min 6 chars)</label>
+          <input id="passwordInput" type="password" placeholder="••••••••"
+            class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
         </div>
-        <div>
-          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Money Expensed</label>
-          <input id="expenseAmount" type="number" step="0.01" min="0.01" required placeholder="0.00"
-            class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+
+        <p id="authMessage" class="text-sm font-medium hidden"></p>
+
+        <div class="flex gap-3 pt-3">
+          <button onclick="handleAuth('login')"
+            class="w-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold py-2.5 rounded-xl shadow-md shadow-indigo-500/20 transition">
+            Log In
+          </button>
+          <button onclick="handleAuth('register')"
+            class="w-1/2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-semibold py-2.5 rounded-xl transition">
+            Register
+          </button>
         </div>
+      </div>
+    </div>
+
+    <!-- 2. MAIN EXPENSE DASHBOARD -->
+    <div id="appSection" class="max-w-5xl mx-auto hidden space-y-6">
+
+      <!-- User Bar & Summary Cards -->
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-6 rounded-3xl shadow-sm flex flex-wrap justify-between items-center gap-4 transition-colors duration-300">
         <div>
-          <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Date (Auto-Set)</label>
-          <div class="flex gap-2">
-            <input id="expenseDate" type="text" disabled
-              class="w-full bg-slate-100 border border-slate-200 text-slate-600 rounded-lg px-3 py-2 text-sm" />
-            <button id="saveBtn" type="submit"
-              class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded-lg transition shrink-0">
-              + Save
-            </button>
+          <span class="text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">Personal Ledger</span>
+          <h1 class="text-2xl font-bold text-zinc-900 dark:text-white mt-0.5">Daily Expense Sheet</h1>
+          <p class="text-sm text-zinc-500 dark:text-zinc-400">Logged in as: <span id="currentUserDisplay" class="font-semibold text-zinc-800 dark:text-zinc-200"></span></p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <button onclick="exportToCSV()"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center gap-2">
+            <span>📥</span> Export Sheet (.CSV)
+          </button>
+          <button onclick="logout()"
+            class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-semibold px-4 py-2.5 rounded-xl transition">
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Stats Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-5 rounded-2xl shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Total Entries</p>
+          <p id="statEntriesCount" class="text-2xl font-bold text-zinc-900 dark:text-white mt-1">0</p>
+        </div>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-5 rounded-2xl shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Today's Date</p>
+          <p id="statTodayDate" class="text-2xl font-bold text-violet-600 dark:text-violet-400 mt-1">--</p>
+        </div>
+        <div class="bg-gradient-to-br from-violet-600 to-indigo-600 p-5 rounded-2xl shadow-md shadow-indigo-500/10 text-white">
+          <p class="text-xs font-semibold uppercase tracking-wider text-violet-200">Grand Total Expensed</p>
+          <p id="totalAmountDisplay" class="text-2xl font-bold mt-1">0.00</p>
+        </div>
+      </div>
+
+      <!-- Add Expense Form -->
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-6 rounded-3xl shadow-sm transition-colors duration-300">
+        <h2 class="text-base font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-violet-500"></span> Write New Expense
+        </h2>
+        <form onsubmit="addExpense(event)" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-semibold uppercase text-zinc-400 mb-1.5">Serial No.</label>
+            <input id="nextSerialPreview" type="text" disabled
+              class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 rounded-xl px-3 py-2.5 font-mono font-bold text-center" />
           </div>
-        </div>
-      </form>
-    </div>
+          <div class="md:col-span-4">
+            <label class="block text-xs font-semibold uppercase text-zinc-600 dark:text-zinc-300 mb-1.5">Where Expensed</label>
+            <input id="expenseName" type="text" required placeholder="e.g. Tea, Bus Fare, Grocery"
+              class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-xs font-semibold uppercase text-zinc-600 dark:text-zinc-300 mb-1.5">Money Expensed</label>
+            <input id="expenseAmount" type="number" step="0.01" min="0.01" required placeholder="0.00"
+              class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition" />
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-xs font-semibold uppercase text-zinc-400 mb-1.5">Date (Auto)</label>
+            <div class="flex gap-2">
+              <input id="expenseDate" type="text" disabled
+                class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 rounded-xl px-3 py-2.5 text-xs font-mono" />
+              <button id="saveBtn" type="submit"
+                class="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-indigo-500/20 transition shrink-0">
+                + Save
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
 
-    <!-- Expense Table -->
-    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-        <h2 class="text-lg font-semibold">Stored Expenses (Day by Day)</h2>
-        <div class="text-sm font-medium text-slate-600">
-          Grand Total: <span id="totalAmountDisplay" class="text-lg font-bold text-indigo-600">0.00</span>
+      <!-- Expense History Table -->
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
+        <div class="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+          <h2 class="text-base font-bold text-zinc-900 dark:text-white">Stored Expenses (Day by Day)</h2>
+          <span class="text-xs text-zinc-400">Auto-numbered sequence</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-zinc-50/80 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 text-xs uppercase border-b border-zinc-200/80 dark:border-zinc-800">
+                <th class="py-3.5 px-5 w-28">Serial No.</th>
+                <th class="py-3.5 px-5">Where Expensed</th>
+                <th class="py-3.5 px-5">Money Expensed</th>
+                <th class="py-3.5 px-5">Date</th>
+                <th class="py-3.5 px-5 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="expenseTableBody" class="divide-y divide-zinc-100 dark:divide-zinc-800/70 text-sm"></tbody>
+          </table>
         </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
-              <th class="py-3.5 px-4 w-28">Serial No.</th>
-              <th class="py-3.5 px-4">Where Expensed</th>
-              <th class="py-3.5 px-4">Money Expensed</th>
-              <th class="py-3.5 px-4">Date</th>
-              <th class="py-3.5 px-4 text-right">Remove</th>
-            </tr>
-          </thead>
-          <tbody id="expenseTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
-        </table>
-      </div>
     </div>
-  </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-zinc-200/80 dark:border-zinc-800/80 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm py-5 mt-12 transition-colors duration-300">
+    <div class="max-w-5xl mx-auto px-4 text-center">
+      <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400 flex items-center justify-center gap-1.5">
+        With
+        <span class="inline-block text-red-500 animate-pulse text-base" aria-label="love">❤️</span>
+        from <span class="font-bold bg-gradient-to-r from-violet-600 to-indigo-500 bg-clip-text text-transparent">Purnendu</span>
+      </p>
+    </div>
+  </footer>
 
   <script>
     // ============================================================================
@@ -132,6 +210,37 @@
     const SUPABASE_ANON_KEY = "sb_publishable_ac0m_HwMQ7JrFczmPQd6uQ_CfkyiVnd";
     // ============================================================================
 
+    // --- THEME (WHITE / DARK) CONTROLLER ---
+    function initTheme() {
+      const savedTheme = localStorage.getItem('portal_theme') || 'light';
+      applyTheme(savedTheme);
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      applyTheme(isDark ? 'light' : 'dark');
+    }
+
+    function applyTheme(theme) {
+      const htmlEl = document.documentElement;
+      const iconEl = document.getElementById('themeIcon');
+      const textEl = document.getElementById('themeText');
+
+      if (theme === 'dark') {
+        htmlEl.classList.add('dark');
+        iconEl.textContent = '☀️';
+        textEl.textContent = 'White Mode';
+      } else {
+        htmlEl.classList.remove('dark');
+        iconEl.textContent = '🌙';
+        textEl.textContent = 'Dark Mode';
+      }
+      localStorage.setItem('portal_theme', theme);
+    }
+
+    initTheme();
+
+    // --- SUPABASE & APP LOGIC ---
     let supabaseClient = null;
     let currentUser = null;
     let cachedExpenses = [];
@@ -148,7 +257,6 @@
       return today.toISOString().split('T')[0];
     }
 
-    // Allows users to type a simple name like "rahul" OR a full email
     function formatToEmail(input) {
       const clean = input.trim().toLowerCase();
       return clean.includes('@') ? clean : `${clean}@expenseportal.local`;
@@ -160,7 +268,6 @@
         : email;
     }
 
-    // Check if the user is already logged in when page loads
     async function checkExistingSession() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session && session.user) {
@@ -169,7 +276,6 @@
       }
     }
 
-    // Register or Log In with Supabase Cloud
     async function handleAuth(mode) {
       if (!supabaseClient) {
         alert("Please paste your SUPABASE_URL and SUPABASE_ANON_KEY in index.html first!");
@@ -179,7 +285,7 @@
       const rawUsername = document.getElementById('usernameInput').value;
       const password = document.getElementById('passwordInput').value;
       const msgEl = document.getElementById('authMessage');
-      msgEl.className = 'text-sm text-red-500';
+      msgEl.className = 'text-sm font-medium text-red-500';
 
       if (!rawUsername.trim() || !password) {
         msgEl.textContent = 'Please enter both username and password.';
@@ -194,7 +300,7 @@
       }
 
       const email = formatToEmail(rawUsername);
-      msgEl.className = 'text-sm text-indigo-600';
+      msgEl.className = 'text-sm font-medium text-violet-600 dark:text-violet-400';
       msgEl.textContent = mode === 'register' ? 'Creating your cloud account...' : 'Logging in...';
       msgEl.classList.remove('hidden');
 
@@ -206,7 +312,7 @@
       }
 
       if (result.error) {
-        msgEl.className = 'text-sm text-red-500';
+        msgEl.className = 'text-sm font-medium text-red-500';
         msgEl.textContent = result.error.message;
         return;
       }
@@ -219,10 +325,12 @@
     }
 
     function showDashboard() {
+      const today = getTodayDate();
       document.getElementById('authSection').classList.add('hidden');
       document.getElementById('appSection').classList.remove('hidden');
       document.getElementById('currentUserDisplay').textContent = displayFriendlyName(currentUser.email);
-      document.getElementById('expenseDate').value = getTodayDate();
+      document.getElementById('expenseDate').value = today;
+      document.getElementById('statTodayDate').textContent = today;
       loadExpensesFromCloud();
     }
 
@@ -238,10 +346,9 @@
       document.getElementById('authSection').classList.remove('hidden');
     }
 
-    // Fetch logged-in user's expenses from Supabase Cloud
     async function loadExpensesFromCloud() {
       const tbody = document.getElementById('expenseTableBody');
-      tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">Loading your cloud expenses...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-zinc-400">Loading your cloud expenses...</td></tr>`;
 
       const { data, error } = await supabaseClient
         .from('expenses')
@@ -257,7 +364,6 @@
       renderExpenses();
     }
 
-    // Save a new expense to Supabase Cloud
     async function addExpense(e) {
       e.preventDefault();
       const nameInput = document.getElementById('expenseName');
@@ -290,7 +396,6 @@
       await loadExpensesFromCloud();
     }
 
-    // Delete an expense from Supabase Cloud
     async function deleteExpense(id) {
       const { error } = await supabaseClient
         .from('expenses')
@@ -305,19 +410,19 @@
       await loadExpensesFromCloud();
     }
 
-    // Render Table & Auto-Modify Serial Numbers (1, 2, 3...)
     function renderExpenses() {
       const tbody = document.getElementById('expenseTableBody');
       tbody.innerHTML = '';
 
-      document.getElementById('nextSerialPreview').value = cachedExpenses.length + 1;
+      document.getElementById('nextSerialPreview').value = '#' + (cachedExpenses.length + 1);
+      document.getElementById('statEntriesCount').textContent = cachedExpenses.length;
 
       let grandTotal = 0;
 
       if (cachedExpenses.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="5" class="py-8 text-center text-slate-400">
+            <td colspan="5" class="py-12 text-center text-zinc-400 dark:text-zinc-500">
               No expenses recorded yet. Write your first expense above!
             </td>
           </tr>`;
@@ -335,9 +440,9 @@
         if (item.expense_date !== lastDate) {
           lastDate = item.expense_date;
           const dayHeader = document.createElement('tr');
-          dayHeader.className = 'bg-indigo-50/60';
+          dayHeader.className = 'bg-violet-50/70 dark:bg-violet-950/30';
           dayHeader.innerHTML = `
-            <td colspan="5" class="py-2 px-4 text-xs font-bold uppercase tracking-wider text-indigo-700">
+            <td colspan="5" class="py-2.5 px-5 text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-300">
               📅 Date: ${item.expense_date}
             </td>
           `;
@@ -345,15 +450,15 @@
         }
 
         const row = document.createElement('tr');
-        row.className = 'hover:bg-slate-50 transition';
+        row.className = 'hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition';
         row.innerHTML = `
-          <td class="py-3 px-4 font-mono font-semibold text-slate-600">${serialNo}</td>
-          <td class="py-3 px-4 font-medium text-slate-800">${escapeHTML(item.expense_name)}</td>
-          <td class="py-3 px-4 font-semibold text-emerald-700">${amountNum.toFixed(2)}</td>
-          <td class="py-3 px-4 text-slate-500">${item.expense_date}</td>
-          <td class="py-3 px-4 text-right">
+          <td class="py-3.5 px-5 font-mono font-semibold text-zinc-500 dark:text-zinc-400">#${serialNo}</td>
+          <td class="py-3.5 px-5 font-medium text-zinc-900 dark:text-zinc-100">${escapeHTML(item.expense_name)}</td>
+          <td class="py-3.5 px-5 font-bold text-emerald-600 dark:text-emerald-400">${amountNum.toFixed(2)}</td>
+          <td class="py-3.5 px-5 text-zinc-500 dark:text-zinc-400 font-mono text-xs">${item.expense_date}</td>
+          <td class="py-3.5 px-5 text-right">
             <button onclick="deleteExpense('${item.id}')"
-              class="text-red-500 hover:text-red-700 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 transition">
+              class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs font-semibold px-2.5 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 transition">
               Delete
             </button>
           </td>
@@ -364,7 +469,6 @@
       document.getElementById('totalAmountDisplay').textContent = grandTotal.toFixed(2);
     }
 
-    // Export Cloud Expenses to Excel / CSV
     function exportToCSV() {
       if (cachedExpenses.length === 0) {
         alert('Please add at least one expense before exporting!');
